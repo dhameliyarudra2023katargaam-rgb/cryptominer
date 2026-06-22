@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "303050505618",
+    "project_id": "cryptominer-24db5",
+    "storage_bucket": "cryptominer-24db5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:303050505618:android:a16ba25663f80356a6954b",
+        "android_client_info": {
+          "package_name": "com.app.projectminer1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4IFSutM1d0GtZ3P60AuM153QxG6ZYLco"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
