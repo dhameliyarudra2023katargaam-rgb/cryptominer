@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "303050505618-9lom1a8uag08to71djlhknefs00cs1j3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.app.projectminer1",
+            "certificate_hash": "071590db729eabdd9016d3e08e301a4fc8ea68bc"
+          }
+        },
+        {
           "client_id": "303050505618-h2sahs645d636nha2s2snpngvkpfi8gq.apps.googleusercontent.com",
           "client_type": 3
         }
