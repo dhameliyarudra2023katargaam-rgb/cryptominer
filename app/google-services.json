@@ -7,12 +7,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:303050505618:android:a16ba25663f80356a6954b",
+        "mobilesdk_app_id": "1:303050505618:android:3945b0c965c17005a6954b",
         "android_client_info": {
           "package_name": "com.app.projectminer1"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "303050505618-h2sahs645d636nha2s2snpngvkpfi8gq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD4IFSutM1d0GtZ3P60AuM153QxG6ZYLco"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "303050505618-h2sahs645d636nha2s2snpngvkpfi8gq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "303050505618-vttgknm1qdauc1tca5ae9p50kc348rt1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.app.projectminer1"
+              }
+            }
+          ]
         }
       }
     }
