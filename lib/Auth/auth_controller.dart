@@ -6,6 +6,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../Utility/common_text.dart';
+import '../Utility/common_dialog.dart';
 import '../Api/api_response.dart';
 import '../Repo/auth_repo.dart';
 import '../Service/storage_service.dart';
@@ -20,7 +21,7 @@ import 'otp_verification_screen.dart';
 import 'email_signup_screen.dart';
 import '../Service/notification_service.dart';
 
-class AuthController extends GetxController {
+class AuthController extends GetxController with WidgetsBindingObserver {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final dobController = TextEditingController();
@@ -36,6 +37,41 @@ class AuthController extends GetxController {
   final RxBool obscurePassword = true.obs;
   final RxBool isCheckingUsername = false.obs;
   final Rxn<bool> isUsernameUnique = Rxn<bool>();
+
+  final RxString userRole = "".obs;
+  final RxString userName = "".obs;
+  final RxString displayUserId = "".obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    WidgetsBinding.instance.addObserver(this);
+    userRole.value = SharedPrefHelper.getString("role") ?? "";
+    userName.value = SharedPrefHelper.getString("name") ?? "";
+    displayUserId.value = SharedPrefHelper.getString("displayUserId") ?? "";
+  }
+
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPasswordResetPending();
+    }
+  }
+
+  Future<void> _checkPasswordResetPending() async {
+    final bool isPending = SharedPrefHelper.getBool("pwd_reset_pending") ?? false;
+    if (isPending) {
+      await SharedPrefHelper.remove("pwd_reset_pending");
+      Future.delayed(const Duration(milliseconds: 500), () {
+        CommonDialog.show(
+          title: "Password Changed",
+          message: "Password changed successfully! Please login with your new password.",
+          isError: false,
+        );
+      });
+    }
+  }
   
   Timer? _usernameDebounceTimer;
   StreamSubscription<DocumentSnapshot>? _verificationSubscription;
@@ -81,6 +117,7 @@ class AuthController extends GetxController {
 
   @override
   void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
     nameController.dispose();
     emailController.dispose();
     dobController.dispose();
@@ -465,7 +502,7 @@ class AuthController extends GetxController {
               ),
               const SizedBox(height: 12),
               CommonText.body(
-                "Tamaroo account successfully verify thai gayu chhe!",
+                "Your account has been verified successfully!",
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
               ),
@@ -535,8 +572,13 @@ class AuthController extends GetxController {
         if (passwordResponse.data?.refreshToken != null) {
           await SharedPrefHelper.setString("refreshToken", passwordResponse.data!.refreshToken!);
         }
+        if (passwordResponse.data?.user?.role != null) {
+          await SharedPrefHelper.setString("role", passwordResponse.data!.user!.role!);
+          userRole.value = passwordResponse.data!.user!.role!;
+        }
         await SharedPrefHelper.setString("email", signupEmail.value);
         await SharedPrefHelper.setString("name", username);
+        userName.value = username;
 
         // Step 2: Now that we are authenticated, update Profile Details
         final Map<String, dynamic> updateBody = {
@@ -609,6 +651,7 @@ class AuthController extends GetxController {
 
       if (responseModel.isSuccess == true) {
         await SharedPrefHelper.setString("name", username);
+        userName.value = username;
         await fetchCurrentUserDetails();
 
         Get.snackbar(
@@ -806,7 +849,7 @@ class AuthController extends GetxController {
   }
 
   // Handle Logout logic
-  Future<void> logout() async {
+  Future<void> logout({bool showSnackbar = true}) async {
     try {
       isLoading.value = true;
 
@@ -820,6 +863,11 @@ class AuthController extends GetxController {
       await SharedPrefHelper.remove("email");
       await SharedPrefHelper.remove("name");
       await SharedPrefHelper.remove("hasMpin");
+      await SharedPrefHelper.remove("role");
+      await SharedPrefHelper.remove("displayUserId");
+      userRole.value = "";
+      userName.value = "";
+      displayUserId.value = "";
 
       MpinController.isSessionUnlocked = false;
 
@@ -855,13 +903,15 @@ class AuthController extends GetxController {
         mpinCtrl.isConfirming.value = false;
       }
 
-      Get.snackbar(
-        "Logged Out",
-        responseModel.message ?? "Logged out successfully!",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.blue.withValues(alpha: 0.9),
-        colorText: Colors.white,
-      );
+      if (showSnackbar) {
+        Get.snackbar(
+          "Logged Out",
+          responseModel.message ?? "Logged out successfully!",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.blue.withValues(alpha: 0.9),
+          colorText: Colors.white,
+        );
+      }
 
       // Navigate back to LoginScreen
       Get.offAll(() => const LoginScreenView());
@@ -926,12 +976,39 @@ class AuthController extends GetxController {
             "name",
             responseModel.data!.user!.name!,
           );
+          userName.value = responseModel.data!.user!.name!;
         }
         if (responseModel.data?.user?.email != null) {
           await SharedPrefHelper.setString(
             "email",
             responseModel.data!.user!.email!,
           );
+        }
+        if (responseModel.data?.user?.role != null) {
+          await SharedPrefHelper.setString(
+            "role",
+            responseModel.data!.user!.role!,
+          );
+          userRole.value = responseModel.data!.user!.role!;
+        }
+        if (responseModel.data?.user?.country != null) {
+          await SharedPrefHelper.setString(
+            "country",
+            responseModel.data!.user!.country!,
+          );
+        }
+        if (responseModel.data?.user?.referralCode != null) {
+          await SharedPrefHelper.setString(
+            "referralCode",
+            responseModel.data!.user!.referralCode!,
+          );
+        }
+        if (responseModel.data?.user?.userId != null) {
+          await SharedPrefHelper.setString(
+            "displayUserId",
+            responseModel.data!.user!.userId!,
+          );
+          displayUserId.value = responseModel.data!.user!.userId!;
         }
         await SharedPrefHelper.setBool(
           "hasMpin",
@@ -946,8 +1023,79 @@ class AuthController extends GetxController {
     }
   }
 
+  // Method to update user profile name and country
+  Future<bool> updateProfileDetails({
+    required String name,
+    required String country,
+  }) async {
+    isLoading.value = true;
+    try {
+      final Map<String, dynamic> body = {
+        "name": name,
+        "country": country,
+      };
+
+      log("Calling updateProfile API with body: $body");
+      AuthModel responseModel = await AuthRepo.updateProfile(body);
+      log("updateProfile API Response: ${responseModel.toJson()}");
+
+      if (responseModel.isSuccess == true) {
+        // Cache name & country
+        await SharedPrefHelper.setString("name", name);
+        userName.value = name;
+        await SharedPrefHelper.setString("country", country);
+
+        // Update name & country in Firestore
+        final String? email = SharedPrefHelper.getString("email");
+        if (email != null && email.isNotEmpty) {
+          try {
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(email.trim().toLowerCase())
+                .update({
+              "name": name,
+              "country": country,
+            });
+            log("Profile details updated in Firestore successfully.");
+          } catch (firestoreError) {
+            log("Firestore profile update failed: $firestoreError");
+          }
+        }
+        
+        // Refresh details to ensure state matches
+        await fetchCurrentUserDetails();
+        return true;
+      } else {
+        Get.snackbar(
+          "Error",
+          responseModel.message ?? "Failed to update profile",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+          colorText: Colors.white,
+        );
+        return false;
+      }
+    } catch (e) {
+      log("Error updating profile details: $e");
+      Get.snackbar(
+        "Error",
+        "Something went wrong",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+        colorText: Colors.white,
+      );
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   // Change user password
-  Future<void> changeUserPassword(String newPassword) async {
+  Future<void> changeUserPassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmNewPassword,
+  }) async {
     if (newPassword.isEmpty || newPassword.length < 8) {
       Get.snackbar(
         "Invalid Password",
@@ -963,21 +1111,49 @@ class AuthController extends GetxController {
       isLoading.value = true;
 
       final Map<String, dynamic> body = {
+        "currentPassword": currentPassword,
         "newPassword": newPassword,
-        "oldPassword": "",
+        "confirmNewPassword": confirmNewPassword,
       };
 
       AuthModel responseModel = await AuthRepo.changePassword(body);
 
       if (responseModel.isSuccess == true) {
+        // Update password in Firestore
+        final String? email = SharedPrefHelper.getString("email");
+        if (email != null && email.isNotEmpty) {
+          try {
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(email.trim().toLowerCase())
+                .update({
+              "password": newPassword,
+            });
+            log("Password updated in Firestore successfully.");
+          } catch (firestoreError) {
+            log("Firestore password update failed: $firestoreError");
+          }
+        }
+
+        // Update password in Firebase Auth
+        try {
+          final firebaseUser = FirebaseAuth.instance.currentUser;
+          if (firebaseUser != null) {
+            await firebaseUser.updatePassword(newPassword);
+            log("Password updated in Firebase Auth successfully.");
+          }
+        } catch (firebaseError) {
+          log("Firebase Auth password update failed: $firebaseError");
+        }
+
+        Get.back(); // Navigate back first
         Get.snackbar(
           "Success",
-          responseModel.message ?? "Password updated successfully!",
+          responseModel.message ?? "Password changed successfully!",
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.green.withValues(alpha: 0.9),
           colorText: Colors.white,
         );
-        Get.back(); // Navigate back
       } else {
         Get.snackbar(
           "Error",
@@ -1095,6 +1271,15 @@ class AuthController extends GetxController {
         await SharedPrefHelper.setString("email", cleanEmail);
         if (responseModel.data?.user?.name != null) {
           await SharedPrefHelper.setString("name", responseModel.data!.user!.name!);
+          userName.value = responseModel.data!.user!.name!;
+        }
+        if (responseModel.data?.user?.role != null) {
+          await SharedPrefHelper.setString("role", responseModel.data!.user!.role!);
+          userRole.value = responseModel.data!.user!.role!;
+        }
+        if (responseModel.data?.user?.userId != null) {
+          await SharedPrefHelper.setString("displayUserId", responseModel.data!.user!.userId!);
+          displayUserId.value = responseModel.data!.user!.userId!;
         }
         await SharedPrefHelper.setBool("hasMpin", true);
 
@@ -1222,18 +1407,20 @@ class AuthController extends GetxController {
         final String backendUsername = responseModel.data?.user?.name ?? username;
         if (backendUsername.isNotEmpty) {
           await SharedPrefHelper.setString("name", backendUsername);
+          userName.value = backendUsername;
         }
       } else {
         throw Exception(responseModel.message ?? "Backend verification failed.");
       }
 
-      // Update Firestore user document with current token
+      // Update Firestore user document with current token and password
       await FirebaseFirestore.instance
           .collection('users')
           .doc(cleanEmail)
           .update({
         "isVerified": true,
         "token": SharedPrefHelper.getString("token") ?? firebaseToken,
+        "password": password,
       });
 
       // Upload FCM token

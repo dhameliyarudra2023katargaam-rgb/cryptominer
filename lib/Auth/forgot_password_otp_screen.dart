@@ -1,20 +1,110 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'mpin_controller.dart';
 import '../Utility/common_color.dart';
 import '../Utility/custom_appbar.dart';
 import '../Utility/common_textfield.dart';
 import '../Utility/font_style.dart';
 import '../Utility/yellow_card.dart';
+import '../Utility/common_dialog.dart';
+import '../Service/storage_service.dart';
 import 'reset_password_otp_screen.dart';
 
-class ForgotPasswordOtpScreen extends StatelessWidget {
+class ForgotPasswordOtpScreen extends StatefulWidget {
   const ForgotPasswordOtpScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final MpinController controller = Get.put(MpinController());
+  State<ForgotPasswordOtpScreen> createState() => _ForgotPasswordOtpScreenState();
+}
 
+class _ForgotPasswordOtpScreenState extends State<ForgotPasswordOtpScreen>
+    with WidgetsBindingObserver {
+  bool _linkSent = false;
+  final MpinController controller = Get.put(MpinController());
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Pre-fill email from saved data
+    controller.emailController.text = SharedPrefHelper.getString("email") ?? "";
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _linkSent) {
+      _linkSent = false;
+      Future.delayed(const Duration(milliseconds: 500), () {
+        CommonDialog.show(
+          title: "Verified Successfully",
+          message: "Your identity has been verified. You can now set a new PIN.",
+          isError: false,
+          onClose: () {
+            Get.off(() => const ResetPasswordOtpScreen());
+          },
+        );
+      });
+    }
+  }
+
+  Future<void> _sendVerificationLink() async {
+    final String email = controller.emailController.text.trim();
+    if (email.isEmpty || !GetUtils.isEmail(email)) {
+      Get.snackbar(
+        "Invalid Email",
+        "Please enter a valid email address",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    try {
+      controller.isLoading.value = true;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await user.sendEmailVerification();
+        setState(() {
+          _linkSent = true;
+        });
+        CommonDialog.show(
+          title: "Verification Link Sent",
+          message:
+              "A verification link has been sent to your email. Please check your email and click the link to verify your identity.",
+          isError: false,
+        );
+      } else {
+        Get.snackbar(
+          "Error",
+          "No active user session found. Please login again.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        "Error",
+        "Failed to send verification link: $e",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+        colorText: Colors.white,
+      );
+    } finally {
+      controller.isLoading.value = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: CommonColor.background,
       body: SafeArea(
@@ -25,7 +115,7 @@ class ForgotPasswordOtpScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const CustomAppBar(
-                title: "Forgot PIN/Password",
+                title: "Forgot PIN",
                 fontSize: 24,
               ),
               const SizedBox(height: 50),
@@ -38,7 +128,7 @@ class ForgotPasswordOtpScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               Text(
-                "Enter your registered email address to receive an OTP code to reset your login PIN.",
+                "Enter your registered email address. We'll send a verification link to confirm your identity.",
                 textAlign: TextAlign.center,
                 style: CommonFontStyles.heading3.copyWith(
                   color: Colors.white70,
@@ -62,10 +152,7 @@ class ForgotPasswordOtpScreen extends StatelessWidget {
                     onTap: controller.isLoading.value
                         ? null
                         : () async {
-                            bool success = await controller.requestForgotPasswordOtp();
-                            if (success) {
-                              Get.to(() => const ResetPasswordOtpScreen());
-                            }
+                            await _sendVerificationLink();
                           },
                     child: controller.isLoading.value
                         ? const SizedBox(
@@ -77,7 +164,7 @@ class ForgotPasswordOtpScreen extends StatelessWidget {
                             ),
                           )
                         : const Text(
-                            "Send OTP",
+                            "Continue",
                             style: CommonFontStyles.heading3,
                           ),
                   )),

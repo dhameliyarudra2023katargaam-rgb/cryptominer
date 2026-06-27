@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 
 import '../../Utility/black_card.dart';
 import '../../Utility/common_color.dart';
@@ -9,6 +10,9 @@ import '../../Utility/custom_appbar.dart';
 import '../../Utility/font_style.dart';
 import '../../Utility/my_avtar.dart';
 import '../../Utility/picture_path.dart';
+import '../../Utility/blue_button.dart';
+import '../../Auth/auth_controller.dart';
+import '../../Service/storage_service.dart';
 
 class MyProfileScreen extends StatefulWidget {
   const MyProfileScreen({super.key});
@@ -18,18 +22,26 @@ class MyProfileScreen extends StatefulWidget {
 }
 
 class _MyProfileScreenState extends State<MyProfileScreen> {
-  final TextEditingController _countryController = TextEditingController(
-    text: "United States",
-  );
-  final TextEditingController _emailController = TextEditingController(
-    text: "loisbecket@gmail.com",
-  );
-  final TextEditingController _referralController = TextEditingController(
-    text: "REF-526445",
-  );
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _countryController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _referralController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final authController = Get.find<AuthController>();
+    final user = authController.apiResponse.data?.data?.user;
+
+    _nameController.text = user?.name ?? SharedPrefHelper.getString("name") ?? "";
+    _countryController.text = user?.country ?? SharedPrefHelper.getString("country") ?? "";
+    _emailController.text = user?.email ?? SharedPrefHelper.getString("email") ?? "";
+    _referralController.text = user?.referralCode ?? SharedPrefHelper.getString("referralCode") ?? "";
+  }
 
   @override
   void dispose() {
+    _nameController.dispose();
     _countryController.dispose();
     _emailController.dispose();
     _referralController.dispose();
@@ -55,8 +67,20 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               const MyAvtar(radius: 60),
               const SizedBox(height: 16),
 
-              const Text("User Name", style: CommonFontStyles.heading2),
+              Obx(() {
+                final authController = Get.find<AuthController>();
+                final name = authController.userName.value.isNotEmpty
+                    ? authController.userName.value
+                    : "User Name";
+                return Text(name, style: CommonFontStyles.heading2);
+              }),
               const SizedBox(height: 36),
+
+              _buildProfileField(
+                label: "Name",
+                controller: _nameController,
+              ),
+              const SizedBox(height: 24),
 
               _buildProfileField(
                 label: "Country",
@@ -73,12 +97,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               _buildProfileField(
                 label: "Email",
                 controller: _emailController,
-                suffixIcon: const Icon(
-                  Icons.chevron_right_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
-                onTap: () {},
+                readOnly: true,
               ),
               const SizedBox(height: 24),
 
@@ -102,17 +121,46 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 36),
 
-              GestureDetector(
-                child: Text(
-                  "Delete Account",
-                  style: CommonFontStyles.heading2.copyWith(
-                    fontSize: 18,
-                    color: CommonColor.red,
-                  ),
-                ),
-              ),
+              Obx(() {
+                final authController = Get.find<AuthController>();
+                return BlueButton(
+                  text: authController.isLoading.value ? "Saving..." : "Save",
+                  width: 370,
+                  height: 50,
+                  onPressed: authController.isLoading.value
+                      ? () {}
+                      : () async {
+                          final name = _nameController.text.trim();
+                          final country = _countryController.text.trim();
+                          if (name.isEmpty) {
+                            Get.snackbar(
+                              "Validation Error",
+                              "Name cannot be empty",
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+                              colorText: Colors.white,
+                            );
+                            return;
+                          }
+                          final success = await authController.updateProfileDetails(
+                            name: name,
+                            country: country,
+                          );
+                          if (success) {
+                            Get.back();
+                            Get.snackbar(
+                              "Success",
+                              "Profile updated successfully",
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: Colors.green.withValues(alpha: 0.9),
+                              colorText: Colors.white,
+                            );
+                          }
+                        },
+                );
+              }),
                   ],
                 ),
               ),

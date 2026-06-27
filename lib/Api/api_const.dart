@@ -55,7 +55,7 @@ class ApiConst {
   // static const String verifyMpinApi = "/auth/verify-mpin";
   // static const String changeMpinApi = "/auth/change-mpin";
 
-  static const String updateProfileApi = "/auth/update-profile";
+  static const String updateProfileApi = "/user/profile";
 
   /// Notification APIs
   static const String notificationApi = "/notifications"; // done

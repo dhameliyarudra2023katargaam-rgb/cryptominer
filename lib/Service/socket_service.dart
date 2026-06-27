@@ -9,6 +9,8 @@ import '../Auth/auth_controller.dart';
 import '../Repo/home_screen_mining_repo.dart';
 import '../Features/Home/home_model.dart';
 import 'notification_service.dart';
+import '../Features/Home/home_controller.dart';
+import '../Features/AdminMining/admin_mining_config_controller.dart';
 
 class SocketService extends GetxService with WidgetsBindingObserver {
   io.Socket? _socket;
@@ -162,6 +164,17 @@ class SocketService extends GetxService with WidgetsBindingObserver {
     // Listen to miningTick event (as per API Doc)
     // _socket?.on('miningTick', handleMiningData);
     _socket?.on('mining:status', handleMiningData);
+
+    // Listen to config updated event to auto-refresh values
+    _socket?.on('mining:config_updated', (data) {
+      dev.log("📢 SocketService: Config updated event! Refreshing...");
+      if (Get.isRegistered<HomeController>()) {
+        Get.find<HomeController>().fetchMiningConfig();
+      }
+      if (Get.isRegistered<AdminMiningConfigController>()) {
+        Get.find<AdminMiningConfigController>().fetchConfig();
+      }
+    });
 
     // Optional: Log all incoming events for troubleshooting
     _socket?.onAny((event, data) {

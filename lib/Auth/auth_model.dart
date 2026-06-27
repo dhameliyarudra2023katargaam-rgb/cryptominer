@@ -61,7 +61,9 @@ class AuthData {
     } else {
       refreshToken = json['refreshToken']?.toString();
     }
-    user = json['user'] != null ? UserModel.fromJson(json['user']) : null;
+    user = json['user'] != null
+        ? UserModel.fromJson(json['user'])
+        : (json['email'] != null || json['_id'] != null ? UserModel.fromJson(json) : null);
   }
 
   Map<String, dynamic> toJson() {
@@ -83,6 +85,10 @@ class UserModel {
   bool? isMpinSet;
   String? createdAt;
   String? updatedAt;
+  String? role;
+  String? country;
+  String? referralCode;
+  String? userId;
 
   UserModel({
     this.sId,
@@ -92,6 +98,10 @@ class UserModel {
     this.isMpinSet,
     this.createdAt,
     this.updatedAt,
+    this.role,
+    this.country,
+    this.referralCode,
+    this.userId,
   });
 
   UserModel.fromJson(Map<String, dynamic> json) {
@@ -102,6 +112,10 @@ class UserModel {
     isMpinSet = json['isMpinSet'] ?? json['hasMpin'] ?? json['isMpin'] ?? (json['mpin'] != null && json['mpin'].toString().isNotEmpty) ?? false;
     createdAt = json['createdAt'];
     updatedAt = json['updatedAt'];
+    role = json['role']?.toString();
+    country = json['country']?.toString();
+    referralCode = json['referralCode']?.toString();
+    userId = json['userId']?.toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -113,6 +127,10 @@ class UserModel {
     dataMap['isMpinSet'] = isMpinSet;
     dataMap['createdAt'] = createdAt;
     dataMap['updatedAt'] = updatedAt;
+    dataMap['role'] = role;
+    dataMap['country'] = country;
+    dataMap['referralCode'] = referralCode;
+    dataMap['userId'] = userId;
     return dataMap;
   }
 }

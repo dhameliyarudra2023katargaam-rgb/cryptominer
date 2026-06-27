@@ -19,6 +19,7 @@ import '../../Auth/auth_controller.dart';
 import '../../Service/notification_service.dart';
 import '../Notification/notification_screen.dart';
 import 'home_controller.dart';
+import '../AdminMining/admin_mining_config_screen.dart';
 
 class HomeScreenView extends StatefulWidget {
   final int initialIndex;
@@ -487,13 +488,17 @@ class _HomeScreenViewState extends State<HomeScreenView> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  BlueButton(
-                    text: "Boost",
-                    // subtitle: "Ads (0/5)",
-                    width: 95,
-                    height: 40,
-                    onPressed: () {},
-                  ),
+                  Obx(() {
+                    final isBoosting = homeController.isBoosting.value;
+                    return BlueButton(
+                      text: isBoosting ? "Loading..." : "Boost",
+                      width: 95,
+                      height: 40,
+                      onPressed: isBoosting
+                          ? () {}
+                          : () => homeController.triggerBoost(),
+                    );
+                  }),
                 ],
               ),
             ),
@@ -583,7 +588,57 @@ class _HomeScreenViewState extends State<HomeScreenView> {
             }),
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
+
+          Obx(() {
+            final authController = Get.find<AuthController>();
+            final isSuperAdmin = authController.userRole.value.toUpperCase() == 'SUPER_ADMIN';
+            if (!isSuperAdmin) {
+              return const SizedBox.shrink();
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: GestureDetector(
+                    onTap: () => Get.to(() => const AdminMiningConfigScreen()),
+                    child: GradientBorderContainer(
+                      width: 370,
+                      height: 60,
+                      borderRadius: 16,
+                      backgroundColor: Colors.black.withValues(alpha: 0.8),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.admin_panel_settings, color: Colors.amber, size: 24),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const CommonText.body(
+                                  "Admin Panel",
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                                ),
+                                CommonText.small(
+                                  "admin@cryptomining.com",
+                                  style: const TextStyle(color: Colors.grey, fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+            );
+          }),
 
           Center(
             child: CommonText.body(

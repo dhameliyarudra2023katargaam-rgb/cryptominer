@@ -15,6 +15,7 @@ class CommonTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final bool borderless;
   final ValueChanged<String>? onChanged;
+  final int? maxLength;
 
   const CommonTextField({
     super.key,
@@ -29,6 +30,7 @@ class CommonTextField extends StatelessWidget {
     this.keyboardType,
     this.borderless = false,
     this.onChanged,
+    this.maxLength,
   });
 
   @override
@@ -42,10 +44,13 @@ class CommonTextField extends StatelessWidget {
         style: style ?? CommonFontStyles.heading3,
         keyboardType: keyboardType,
         onChanged: onChanged,
+        maxLength: maxLength,
+        buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
         decoration: decoration ??
             const InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
+              counterText: "",
             ),
       );
     }
@@ -58,6 +63,8 @@ class CommonTextField extends StatelessWidget {
       style: style ?? CommonFontStyles.body,
       keyboardType: keyboardType,
       onChanged: onChanged,
+      maxLength: maxLength,
+      buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
       decoration: decoration ??
           InputDecoration(
             hintText: hintText,
@@ -70,6 +77,7 @@ class CommonTextField extends StatelessWidget {
               horizontal: 16,
               vertical: 12,
             ),
+            counterText: "",
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(

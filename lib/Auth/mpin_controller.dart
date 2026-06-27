@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../Repo/auth_repo.dart';
 import '../Service/storage_service.dart';
+import '../Utility/common_dialog.dart';
 import 'auth_model.dart';
+import 'login_screen.dart';
 
 class MpinController extends GetxController {
   static bool isSessionUnlocked = false;
@@ -177,12 +179,10 @@ class MpinController extends GetxController {
       };
       AuthModel responseModel = await AuthRepo.forgotMpinOtp(body);
       if (responseModel.isSuccess == true) {
-        Get.snackbar(
-          "OTP Sent",
-          responseModel.message ?? "Verification code sent to your email",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withValues(alpha: 0.9),
-          colorText: Colors.white,
+        CommonDialog.show(
+          title: "OTP Sent",
+          message: responseModel.message ?? "Verification code sent to your email",
+          isError: false,
         );
         return true;
       } else {
@@ -217,21 +217,10 @@ class MpinController extends GetxController {
     final String password = newPasswordController.text.trim();
     final String confirmPassword = confirmPasswordController.text.trim();
 
-    if (otp.isEmpty) {
-      Get.snackbar(
-        "OTP Required",
-        "Please enter the OTP received in email",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-        colorText: Colors.white,
-      );
-      return false;
-    }
-
     if (password.isEmpty || password.length < 4) {
       Get.snackbar(
-        "Invalid Password/PIN",
-        "Password/PIN must be at least 4 characters long",
+        "Invalid PIN",
+        "PIN must be at least 4 digits",
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
         colorText: Colors.white,
@@ -242,7 +231,7 @@ class MpinController extends GetxController {
     if (password != confirmPassword) {
       Get.snackbar(
         "Mismatch",
-        "Passwords do not match",
+        "PINs do not match",
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
         colorText: Colors.white,
@@ -259,12 +248,17 @@ class MpinController extends GetxController {
       };
       AuthModel responseModel = await AuthRepo.resetMpinOtp(body);
       if (responseModel.isSuccess == true) {
-        Get.snackbar(
-          "Success",
-          responseModel.message ?? "Password reset successfully!",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withValues(alpha: 0.9),
-          colorText: Colors.white,
+        emailController.clear();
+        otpController.clear();
+        newPasswordController.clear();
+        confirmPasswordController.clear();
+        CommonDialog.show(
+          title: "PIN Changed",
+          message: responseModel.message ?? "PIN reset successfully! Please login with your new PIN.",
+          isError: false,
+          onClose: () {
+            Get.offAll(() => const LoginScreenView());
+          },
         );
         return true;
       } else {
@@ -279,6 +273,78 @@ class MpinController extends GetxController {
       }
     } catch (e) {
       log("Error resetting password via OTP: $e");
+      Get.snackbar(
+        "Error",
+        "Something went wrong",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+        colorText: Colors.white,
+      );
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Reset MPIN directly (after Firebase link verification, no OTP needed)
+  Future<bool> resetMpinDirect() async {
+    final String newPin = newPasswordController.text.trim();
+    final String confirmPin = confirmPasswordController.text.trim();
+
+    if (newPin.isEmpty || newPin.length < 4) {
+      Get.snackbar(
+        "Invalid PIN",
+        "PIN must be at least 4 digits",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+        colorText: Colors.white,
+      );
+      return false;
+    }
+
+    if (newPin != confirmPin) {
+      Get.snackbar(
+        "Mismatch",
+        "PINs do not match",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+        colorText: Colors.white,
+      );
+      return false;
+    }
+
+    try {
+      isLoading.value = true;
+      final Map<String, dynamic> body = {
+        "mpin": newPin,
+      };
+
+      AuthModel responseModel = await AuthRepo.setMpin(body);
+      if (responseModel.isSuccess == true) {
+        await SharedPrefHelper.setBool("hasMpin", true);
+        newPasswordController.clear();
+        confirmPasswordController.clear();
+        CommonDialog.show(
+          title: "PIN Changed",
+          message: responseModel.message ?? "PIN reset successfully! Please login with your new PIN.",
+          isError: false,
+          onClose: () {
+            Get.offAll(() => const LoginScreenView());
+          },
+        );
+        return true;
+      } else {
+        Get.snackbar(
+          "Error",
+          responseModel.message ?? "Failed to reset PIN",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+          colorText: Colors.white,
+        );
+        return false;
+      }
+    } catch (e) {
+      log("Error resetting MPIN directly: $e");
       Get.snackbar(
         "Error",
         "Something went wrong",

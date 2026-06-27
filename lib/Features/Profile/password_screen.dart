@@ -6,8 +6,11 @@ import '../../Utility/common_color.dart';
 import '../../Utility/custom_appbar.dart';
 import '../../Utility/font_style.dart';
 import '../../Utility/yellow_card.dart';
+import '../../Utility/common_dialog.dart';
 import 'package:get/get.dart';
 import '../../Auth/auth_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../Service/storage_service.dart';
 
 class PasswordMpnScreen extends StatefulWidget {
   const PasswordMpnScreen({super.key});
@@ -17,9 +20,11 @@ class PasswordMpnScreen extends StatefulWidget {
 }
 
 class _PasswordMpnScreenState extends State<PasswordMpnScreen> {
+  final TextEditingController _currentPasswordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
   TextEditingController();
+  bool _obscureCurrentPassword = true;
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -27,6 +32,7 @@ class _PasswordMpnScreenState extends State<PasswordMpnScreen> {
 
   @override
   void dispose() {
+    _currentPasswordController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -63,6 +69,18 @@ class _PasswordMpnScreenState extends State<PasswordMpnScreen> {
                       const SizedBox(height: 40),
 
                       _buildPasswordField(
+                        label: "Current Password",
+                        controller: _currentPasswordController,
+                        obscureText: _obscureCurrentPassword,
+                        onToggleVisibility: () {
+                          setState(() {
+                            _obscureCurrentPassword = !_obscureCurrentPassword;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 24),
+
+                      _buildPasswordField(
                         label: "New Password",
                         controller: _newPasswordController,
                         obscureText: _obscureNewPassword,
@@ -84,8 +102,58 @@ class _PasswordMpnScreenState extends State<PasswordMpnScreen> {
                           });
                         },
                       ),
+                      const SizedBox(height: 10),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () async {
+                            final String? email = SharedPrefHelper.getString("email");
+                            if (email == null || email.isEmpty) {
+                              Get.snackbar(
+                                "Error",
+                                "Email address not found",
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+                                colorText: Colors.white,
+                              );
+                              return;
+                            }
+                            try {
+                              authController.isLoading.value = true;
+                              await FirebaseAuth.instance.sendPasswordResetEmail(email: email.trim());
+                              await SharedPrefHelper.setBool("pwd_reset_pending", true);
+                              CommonDialog.show(
+                                title: "Reset Link Sent",
+                                message: "Password reset email link sent successfully! Please check your email to reset your password and login again.",
+                                isError: false,
+                                onClose: () async {
+                                  await authController.logout(showSnackbar: false);
+                                },
+                              );
+                            } catch (e) {
+                              Get.snackbar(
+                                "Error",
+                                "Failed to send reset email: $e",
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+                                colorText: Colors.white,
+                              );
+                            } finally {
+                              authController.isLoading.value = false;
+                            }
+                          },
+                          child: const Text(
+                            "Forgot Password?",
+                            style: TextStyle(
+                              color: CommonColor.blue,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
 
-                      const SizedBox(height: 360),
+                      const SizedBox(height: 180),
                       Obx(() => YellowCard(
                         width: 370,
                         height: 50,
@@ -93,9 +161,20 @@ class _PasswordMpnScreenState extends State<PasswordMpnScreen> {
                         onTap: authController.isLoading.value
                             ? null
                             : () {
-                                String newPass = _newPasswordController.text.trim();
-                                String confirmPass = _confirmPasswordController.text.trim();
+                                String currentPass = _currentPasswordController.text;
+                                String newPass = _newPasswordController.text;
+                                String confirmPass = _confirmPasswordController.text;
                                 
+                                if (currentPass.isEmpty) {
+                                  Get.snackbar(
+                                    "Error",
+                                    "Please enter current password",
+                                    snackPosition: SnackPosition.BOTTOM,
+                                    backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+                                    colorText: Colors.white,
+                                  );
+                                  return;
+                                }
                                 if (newPass.isEmpty) {
                                   Get.snackbar(
                                     "Error",
@@ -119,7 +198,7 @@ class _PasswordMpnScreenState extends State<PasswordMpnScreen> {
                                 if (newPass != confirmPass) {
                                   Get.snackbar(
                                     "Error",
-                                    "Passwords do not match",
+                                    "New passwords do not match",
                                     snackPosition: SnackPosition.BOTTOM,
                                     backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
                                     colorText: Colors.white,
@@ -127,7 +206,11 @@ class _PasswordMpnScreenState extends State<PasswordMpnScreen> {
                                   return;
                                 }
                                 
-                                authController.changeUserPassword(newPass);
+                                authController.changeUserPassword(
+                                  currentPassword: currentPass,
+                                  newPassword: newPass,
+                                  confirmNewPassword: confirmPass,
+                                );
                               },
                         child: authController.isLoading.value
                             ? const SizedBox(

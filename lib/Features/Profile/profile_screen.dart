@@ -78,43 +78,52 @@ class _ProfileScreenViewState extends State<ProfileScreenView> {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CommonText.h2(
-                          "User Name",
-                          style: const TextStyle(fontSize: 18),
-                        ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            const CommonText.body(
-                              "ID: 526445",
-                              style: TextStyle(
-                                color: CommonColor.greyColor,
+                    child: Obx(() {
+                      final authController = Get.find<AuthController>();
+                      final name = authController.userName.value.isNotEmpty
+                          ? authController.userName.value
+                          : "User Name";
+                      final id = authController.displayUserId.value.isNotEmpty
+                          ? authController.displayUserId.value
+                          : "526445";
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CommonText.h2(
+                            name,
+                            style: const TextStyle(fontSize: 18),
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              CommonText.body(
+                                "ID: $id",
+                                style: const TextStyle(
+                                  color: CommonColor.greyColor,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: () {
-                                CommonCopyClipboard.copy(
-                                  context,
-                                  "526445",
-                                  message: "User ID copied",
-                                );
-                              },
-                              child:    SvgPicture.asset(
-                                PicturePath.copyIcon,
-                                width: 14,
-                                height: 14,
-                                fit: BoxFit.contain,
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () {
+                                  CommonCopyClipboard.copy(
+                                    context,
+                                    id,
+                                    message: "User ID copied",
+                                  );
+                                },
+                                child: SvgPicture.asset(
+                                  PicturePath.copyIcon,
+                                  width: 14,
+                                  height: 14,
+                                  fit: BoxFit.contain,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                            ],
+                          ),
+                        ],
+                      );
+                    }),
                   ),
                   const NextArrowIcon(size: 20),
                 ],
