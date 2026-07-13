@@ -93,6 +93,17 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       return;
     }
 
+    if (_controller.isDobValid.value == false) {
+      Get.snackbar(
+        "Invalid Age",
+        "You must be at least 18 years old to sign up",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+        colorText: Colors.white,
+      );
+      return;
+    }
+
     if (widget.isGoogleUser) {
       await _controller.completeGoogleSignup(
         username: username,
@@ -225,6 +236,21 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         onPressed: () => _controller.selectDate(context),
                       ),
                     ),
+                    Obx(() {
+                      if (_controller.isDobValid.value == false) {
+                        return const Padding(
+                          padding: EdgeInsets.only(left: 4.0, top: 6.0),
+                          child: Text(
+                            "You must be at least 18 years old",
+                            style: TextStyle(
+                              color: CommonColor.red,
+                              fontSize: 12,
+                            ),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    }),
                     const SizedBox(height: 24),
 
 
@@ -257,7 +283,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                               : const CommonText.h3(
                                   "Complete Setup",
                                   style: TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.normal,
                                   ),
                                 ),
                         ),

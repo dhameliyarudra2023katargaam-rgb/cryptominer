@@ -1,7 +1,7 @@
 import 'dart:developer';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../Repo/wallet_repo.dart';
+import '../../Utility/app_snackbar.dart';
 
 class WalletController extends GetxController {
   final RxMap<String, dynamic> walletBalance = <String, dynamic>{}.obs;
@@ -76,23 +76,11 @@ class WalletController extends GetxController {
 
   Future<bool> submitWithdrawal(double amount, String address, String type) async {
     if (amount <= 0) {
-      Get.snackbar(
-        "Invalid Amount",
-        "Please enter a valid amount",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-        colorText: Colors.white,
-      );
+      AppSnackbar.error("Please enter a valid amount", title: "Invalid Amount");
       return false;
     }
     if (address.isEmpty) {
-      Get.snackbar(
-        "Required",
-        "Please enter address details",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-        colorText: Colors.white,
-      );
+      AppSnackbar.error("Please enter address details", title: "Required");
       return false;
     }
 
@@ -134,36 +122,22 @@ class WalletController extends GetxController {
           lastWithdrawalId.value = "";
         }
 
-        Get.snackbar(
-          "Success",
+        AppSnackbar.success(
           response['message'] ?? "Withdrawal request submitted successfully",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withValues(alpha: 0.9),
-          colorText: Colors.white,
         );
         // Refresh balance and history
         fetchWalletBalance();
         fetchWithdrawalHistory();
         return true;
       } else {
-        Get.snackbar(
-          "Error",
+        AppSnackbar.error(
           response?['message'] ?? "Failed to request withdrawal",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-          colorText: Colors.white,
         );
         return false;
       }
     } catch (e) {
       log("Error requesting withdrawal: $e");
-      Get.snackbar(
-        "Error",
-        "Something went wrong",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-        colorText: Colors.white,
-      );
+      AppSnackbar.error("Something went wrong");
       return false;
     } finally {
       isSubmittingWithdrawal.value = false;

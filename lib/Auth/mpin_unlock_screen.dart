@@ -18,7 +18,7 @@ class MpinUnlockScreen extends StatelessWidget {
       backgroundColor: CommonColor.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
+          physics: const NeverScrollableScrollPhysics(),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 60.0),
             child: Column(
@@ -38,7 +38,7 @@ class MpinUnlockScreen extends StatelessWidget {
                   style: CommonFontStyles.heading3.copyWith(
                     color: Colors.white,
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.normal,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -65,7 +65,7 @@ class MpinUnlockScreen extends StatelessWidget {
                     "Forgot PIN?",
                     style: CommonFontStyles.body.copyWith(
                       color: CommonColor.blue,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.normal,
                     ),
                   ),
                 ),

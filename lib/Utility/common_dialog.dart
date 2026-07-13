@@ -52,7 +52,7 @@ class CommonDialog {
                   title,
                   style: const TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.normal,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -80,7 +80,7 @@ class CommonDialog {
                     "Okay",
                     style: TextStyle(
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.normal,
                     ),
                   ),
                 ),
@@ -132,7 +132,7 @@ class CommonDialog {
                   title,
                   style: const TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.normal,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -165,7 +165,7 @@ class CommonDialog {
                             cancelText,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.normal,
                             ),
                           ),
                         ),
@@ -189,7 +189,7 @@ class CommonDialog {
                             confirmText,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.normal,
                             ),
                           ),
                         ),

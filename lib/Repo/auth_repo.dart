@@ -43,13 +43,7 @@ class AuthRepo {
 
   /// Logout User Repo
   static Future<AuthModel> logoutUser() async {
-    final String? token = SharedPrefHelper.getString("token");
     Map<String, String> headers = {};
-    if (token != null && token.isNotEmpty) {
-      headers = {
-        "Authorization": "Bearer $token",
-      };
-    }
     var response = await ApiService().getResponse(
       apiType: APIType.aPost,
       url: "${ApiConst.baseUrl}${ApiConst.logoutApi}",
@@ -62,13 +56,7 @@ class AuthRepo {
 
   /// Get Current User Details Repo
   static Future<AuthModel> getMe() async {
-    final String? token = SharedPrefHelper.getString("token");
     Map<String, String> headers = {};
-    if (token != null && token.isNotEmpty) {
-      headers = {
-        "Authorization": "Bearer $token",
-      };
-    }
     var response = await ApiService().getResponse(
       apiType: APIType.aGet,
       url: "${ApiConst.baseUrl}${ApiConst.meApi}",
@@ -81,14 +69,9 @@ class AuthRepo {
 
   /// Update Profile Repo
   static Future<AuthModel> updateProfile(Map<String, dynamic> body) async {
-    final String? token = SharedPrefHelper.getString("token");
-    Map<String, String> headers = {};
-    if (token != null && token.isNotEmpty) {
-      headers = {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json",
-      };
-    }
+    Map<String, String> headers = {
+      "Content-Type": "application/json",
+    };
     var response = await ApiService().getResponse(
       apiType: APIType.aPut,
       url: "${ApiConst.baseUrl}${ApiConst.updateProfileApi}",
@@ -102,13 +85,7 @@ class AuthRepo {
 
   /// Change Password Repo
   static Future<AuthModel> changePassword(Map<String, dynamic> body) async {
-    final String? token = SharedPrefHelper.getString("token");
     Map<String, String> headers = {};
-    if (token != null && token.isNotEmpty) {
-      headers = {
-        "Authorization": "Bearer $token",
-      };
-    }
     var response = await ApiService().getResponse(
       apiType: APIType.aPost,
       url: "${ApiConst.baseUrl}${ApiConst.changePasswordApi}",
@@ -122,14 +99,9 @@ class AuthRepo {
 
   /// Create MPIN Repo
   static Future<AuthModel> createMpin(Map<String, dynamic> body) async {
-    final String? token = SharedPrefHelper.getString("token");
-    Map<String, String> headers = {};
-    if (token != null && token.isNotEmpty) {
-      headers = {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json",
-      };
-    }
+    Map<String, String> headers = {
+      "Content-Type": "application/json",
+    };
     var response = await ApiService().getResponse(
       apiType: APIType.aPost,
       url: "${ApiConst.baseUrl}${ApiConst.createMpinApi}",
@@ -143,14 +115,9 @@ class AuthRepo {
 
   /// Set MPIN Repo
   static Future<AuthModel> setMpin(Map<String, dynamic> body) async {
-    final String? token = SharedPrefHelper.getString("token");
-    Map<String, String> headers = {};
-    if (token != null && token.isNotEmpty) {
-      headers = {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json",
-      };
-    }
+    Map<String, String> headers = {
+      "Content-Type": "application/json",
+    };
     var response = await ApiService().getResponse(
       apiType: APIType.aPost,
       url: "${ApiConst.baseUrl}${ApiConst.setMpinApi}",
@@ -164,14 +131,9 @@ class AuthRepo {
 
   /// Login MPIN Repo
   static Future<AuthModel> loginMpin(Map<String, dynamic> body) async {
-    final String? token = SharedPrefHelper.getString("token");
-    Map<String, String> headers = {};
-    if (token != null && token.isNotEmpty) {
-      headers = {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json",
-      };
-    }
+    Map<String, String> headers = {
+      "Content-Type": "application/json",
+    };
     var response = await ApiService().getResponse(
       apiType: APIType.aPost,
       url: "${ApiConst.baseUrl}${ApiConst.loginMpinApi}",
@@ -240,6 +202,19 @@ class AuthRepo {
       body: body,
     );
     log("Set Password Response: $response");
+
+    return AuthModel.fromJson(response);
+  }
+
+  /// Delete Account Repo
+  static Future<AuthModel> deleteAccount() async {
+    Map<String, String> headers = {};
+    var response = await ApiService().getResponse(
+      apiType: APIType.aDelete,
+      url: "${ApiConst.baseUrl}${ApiConst.deleteAccountApi}",
+      header: headers,
+    );
+    log("Delete Account Response: $response");
 
     return AuthModel.fromJson(response);
   }

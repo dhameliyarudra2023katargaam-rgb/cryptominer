@@ -37,6 +37,7 @@ class AuthController extends GetxController with WidgetsBindingObserver {
   final RxBool obscurePassword = true.obs;
   final RxBool isCheckingUsername = false.obs;
   final Rxn<bool> isUsernameUnique = Rxn<bool>();
+  final Rxn<bool> isDobValid = Rxn<bool>();
 
   final RxString userRole = "".obs;
   final RxString userName = "".obs;
@@ -157,6 +158,15 @@ class AuthController extends GetxController with WidgetsBindingObserver {
     );
 
     if (picked != null) {
+      // Calculate age for validation
+      final today = DateTime.now();
+      int age = today.year - picked.year;
+      if (today.month < picked.month ||
+          (today.month == picked.month && today.day < picked.day)) {
+        age--;
+      }
+      isDobValid.value = age >= 18;
+
       // Format as DD/MM/YYYY
       final String formattedDate =
           "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
@@ -354,10 +364,10 @@ class AuthController extends GetxController with WidgetsBindingObserver {
             await FirebaseFirestore.instance
                 .collection("users")
                 .doc(cleanEmail)
-                .update({
+                .set({
               "isVerified": true,
               "token": "",
-            });
+            }, SetOptions(merge: true));
             log("Saved verified status to Firestore for: $cleanEmail");
 
             // Sign out to clean up session and prevent auto login
@@ -498,7 +508,7 @@ class AuthController extends GetxController with WidgetsBindingObserver {
               const SizedBox(height: 24),
               const CommonText.h2(
                 "Email Verified",
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.normal),
               ),
               const SizedBox(height: 12),
               CommonText.body(
@@ -803,23 +813,23 @@ class AuthController extends GetxController with WidgetsBindingObserver {
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.green.withValues(alpha: 0.9),
           colorText: Colors.white,
+          titleText: const Text(
+            "Success",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+              fontSize: 15,
+            ),
+          ),
         );
 
         final user = responseModel.data?.user;
-        final bool isProfileIncomplete = user?.birthDate == null || user!.birthDate!.trim().isEmpty;
-
-        if (isProfileIncomplete) {
-          prepareProfileSetup(
-            email: user?.email ?? "",
-            name: user?.name ?? "",
-          );
-          Get.offAll(() => const ProfileSetupScreen(isGoogleUser: true));
+        
+        // Bypassing Profile Setup screen for Google Login as requested (1st way)
+        if (isMpinSet) {
+          Get.offAll(() => const MpinUnlockScreen());
         } else {
-          if (isMpinSet) {
-            Get.offAll(() => const MpinUnlockScreen());
-          } else {
-            Get.offAll(() => const HomeScreenView());
-          }
+          Get.offAll(() => const HomeScreenView());
         }
       } else {
         apiResponse = ApiResponse.error(message: responseModel.message);
@@ -829,6 +839,14 @@ class AuthController extends GetxController with WidgetsBindingObserver {
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
           colorText: Colors.white,
+          titleText: const Text(
+            "Login Failed",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+              fontSize: 15,
+            ),
+          ),
         );
       }
     } catch (e) {
@@ -856,15 +874,28 @@ class AuthController extends GetxController with WidgetsBindingObserver {
       // Call Logout API
       AuthModel responseModel = await AuthRepo.logoutUser();
 
-      // Clear token & userId from SharedPreferences
-      await SharedPrefHelper.remove("token");
-      await SharedPrefHelper.remove("refreshToken");
-      await SharedPrefHelper.remove("userId");
-      await SharedPrefHelper.remove("email");
-      await SharedPrefHelper.remove("name");
-      await SharedPrefHelper.remove("hasMpin");
-      await SharedPrefHelper.remove("role");
-      await SharedPrefHelper.remove("displayUserId");
+     // 1 => 2nd changes
+    //  // Clear token & userId from SharedPreferences
+    //   await SharedPrefHelper.remove("token");
+    //   await SharedPrefHelper.remove("refreshToken");
+    //   await SharedPrefHelper.remove("userId");
+    //   await SharedPrefHelper.remove("email");
+    //   await SharedPrefHelper.remove("name");
+    //   await SharedPrefHelper.remove("hasMpin");
+    //   await SharedPrefHelper.remove("role");
+    //   await SharedPrefHelper.remove("displayUserId");
+     // 1 => 2nd changes
+      // Clear all SharedPreferences except onboarding flag and fcm token
+      bool hasSeenOnboarding = SharedPrefHelper.getBool("hasSeenOnboarding") ?? true;
+      String? fcmToken = SharedPrefHelper.getString("fcmToken");
+
+      await SharedPrefHelper.clear();
+
+      await SharedPrefHelper.setBool("hasSeenOnboarding", hasSeenOnboarding);
+      if (fcmToken != null) {
+        await SharedPrefHelper.setString("fcmToken", fcmToken);
+      }
+
       userRole.value = "";
       userName.value = "";
       displayUserId.value = "";
@@ -903,13 +934,35 @@ class AuthController extends GetxController with WidgetsBindingObserver {
         mpinCtrl.isConfirming.value = false;
       }
 
+      // auto logout
+      // if (showSnackbar) {
+      //   Get.snackbar(
+      //     "Logged Out",
+      //     responseModel.message ?? "Logged out successfully!",
+      //     snackPosition: SnackPosition.BOTTOM,
+      //     backgroundColor: Colors.blue.withValues(alpha: 0.9),
+      //     colorText: Colors.white,
+      //   );
+      // }
+
+      // auto logout
       if (showSnackbar) {
         Get.snackbar(
           "Logged Out",
-          responseModel.message ?? "Logged out successfully!",
+          responseModel.isSuccess == true 
+              ? (responseModel.message ?? "Logged out successfully!") 
+              : "Logged out successfully!",
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.blue.withValues(alpha: 0.9),
+          backgroundColor: Colors.blue.withValues(alpha: 0.6),
           colorText: Colors.white,
+          titleText: const Text(
+            "Logged Out",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+              fontSize: 15,
+            ),
+          ),
         );
       }
 
@@ -918,12 +971,24 @@ class AuthController extends GetxController with WidgetsBindingObserver {
     } catch (e) {
       log("Logout error: $e");
       // Fallback: clear local session to ensure user is not locked in on failure
-      await SharedPrefHelper.remove("token");
-      await SharedPrefHelper.remove("refreshToken");
-      await SharedPrefHelper.remove("userId");
-      await SharedPrefHelper.remove("email");
-      await SharedPrefHelper.remove("name");
-      await SharedPrefHelper.remove("hasMpin");
+      // 1 => 2nd changes
+      //  await SharedPrefHelper.remove("token");
+      // await SharedPrefHelper.remove("refreshToken");
+      // await SharedPrefHelper.remove("userId");
+      // await SharedPrefHelper.remove("email");
+      // await SharedPrefHelper.remove("name");
+      // await SharedPrefHelper.remove("hasMpin");
+     // 1 => 2nd changes
+      bool hasSeenOnboarding = SharedPrefHelper.getBool("hasSeenOnboarding") ?? true;
+      String? fcmToken = SharedPrefHelper.getString("fcmToken");
+
+      await SharedPrefHelper.clear();
+
+      await SharedPrefHelper.setBool("hasSeenOnboarding", hasSeenOnboarding);
+      if (fcmToken != null) {
+        await SharedPrefHelper.setString("fcmToken", fcmToken);
+      }
+
       MpinController.isSessionUnlocked = false;
       if (Get.isRegistered<SocketService>()) {
         Get.find<SocketService>().disconnectSocket();
@@ -1010,10 +1075,16 @@ class AuthController extends GetxController with WidgetsBindingObserver {
           );
           displayUserId.value = responseModel.data!.user!.userId!;
         }
-        await SharedPrefHelper.setBool(
+        
+        /// screen navigation issue
+        
+         await SharedPrefHelper.setBool(
           "hasMpin",
           responseModel.data?.user?.isMpinSet == true,
         );
+        // if (responseModel.data?.user?.isMpinSet == true) {
+        //   await SharedPrefHelper.setBool("hasMpin", true);
+        // }
         log(
           "Saved hasMpin to shared preferences: ${responseModel.data?.user?.isMpinSet == true}",
         );
@@ -1052,10 +1123,10 @@ class AuthController extends GetxController with WidgetsBindingObserver {
             await FirebaseFirestore.instance
                 .collection('users')
                 .doc(email.trim().toLowerCase())
-                .update({
+                .set({
               "name": name,
               "country": country,
-            });
+            }, SetOptions(merge: true));
             log("Profile details updated in Firestore successfully.");
           } catch (firestoreError) {
             log("Firestore profile update failed: $firestoreError");
@@ -1091,8 +1162,9 @@ class AuthController extends GetxController with WidgetsBindingObserver {
   }
 
   // Change user password
-  Future<void> changeUserPassword({
+  Future<bool> changeUserPassword({
     required String currentPassword,
+    required String answer,
     required String newPassword,
     required String confirmNewPassword,
   }) async {
@@ -1104,7 +1176,7 @@ class AuthController extends GetxController with WidgetsBindingObserver {
         backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
         colorText: Colors.white,
       );
-      return;
+      return false;
     }
 
     try {
@@ -1112,6 +1184,7 @@ class AuthController extends GetxController with WidgetsBindingObserver {
 
       final Map<String, dynamic> body = {
         "currentPassword": currentPassword,
+        "answer": answer,
         "newPassword": newPassword,
         "confirmNewPassword": confirmNewPassword,
       };
@@ -1126,9 +1199,9 @@ class AuthController extends GetxController with WidgetsBindingObserver {
             await FirebaseFirestore.instance
                 .collection('users')
                 .doc(email.trim().toLowerCase())
-                .update({
+                .set({
               "password": newPassword,
-            });
+            }, SetOptions(merge: true));
             log("Password updated in Firestore successfully.");
           } catch (firestoreError) {
             log("Firestore password update failed: $firestoreError");
@@ -1146,7 +1219,6 @@ class AuthController extends GetxController with WidgetsBindingObserver {
           log("Firebase Auth password update failed: $firebaseError");
         }
 
-        Get.back(); // Navigate back first
         Get.snackbar(
           "Success",
           responseModel.message ?? "Password changed successfully!",
@@ -1154,6 +1226,7 @@ class AuthController extends GetxController with WidgetsBindingObserver {
           backgroundColor: Colors.green.withValues(alpha: 0.9),
           colorText: Colors.white,
         );
+        return true;
       } else {
         Get.snackbar(
           "Error",
@@ -1162,6 +1235,7 @@ class AuthController extends GetxController with WidgetsBindingObserver {
           backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
           colorText: Colors.white,
         );
+        return false;
       }
     } catch (e) {
       log("Error changing password: $e");
@@ -1172,6 +1246,7 @@ class AuthController extends GetxController with WidgetsBindingObserver {
         backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
         colorText: Colors.white,
       );
+      return false;
     } finally {
       isLoading.value = false;
     }
@@ -1200,6 +1275,20 @@ class AuthController extends GetxController with WidgetsBindingObserver {
 
       if (responseModel.isSuccess == true) {
         await SharedPrefHelper.setBool("hasMpin", true);
+        
+        // Sync MPIN to Firestore
+        final String? email = SharedPrefHelper.getString("email");
+        if (email != null && email.isNotEmpty) {
+          try {
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(email.trim().toLowerCase())
+                .set({"mpin": mpin}, SetOptions(merge: true));
+          } catch (e) {
+            log("Firestore mpin update failed: $e");
+          }
+        }
+
         Get.snackbar(
           "Success",
           responseModel.message ?? "MPIN created successfully!",
@@ -1213,6 +1302,20 @@ class AuthController extends GetxController with WidgetsBindingObserver {
         AuthModel fallbackModel = await AuthRepo.createMpin(body);
         if (fallbackModel.isSuccess == true) {
           await SharedPrefHelper.setBool("hasMpin", true);
+          
+          // Sync MPIN to Firestore
+          final String? email = SharedPrefHelper.getString("email");
+          if (email != null && email.isNotEmpty) {
+            try {
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(email.trim().toLowerCase())
+                  .set({"mpin": mpin}, SetOptions(merge: true));
+            } catch (e) {
+              log("Firestore mpin update failed: $e");
+            }
+          }
+
           Get.snackbar(
             "Success",
             fallbackModel.message ?? "MPIN created successfully!",
@@ -1294,6 +1397,14 @@ class AuthController extends GetxController with WidgetsBindingObserver {
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.green.withValues(alpha: 0.9),
           colorText: Colors.white,
+          titleText: const Text(
+            "Success",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+              fontSize: 15,
+            ),
+          ),
         );
 
         Get.offAll(() => const HomeScreenView());
@@ -1417,11 +1528,11 @@ class AuthController extends GetxController with WidgetsBindingObserver {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(cleanEmail)
-          .update({
+          .set({
         "isVerified": true,
         "token": SharedPrefHelper.getString("token") ?? firebaseToken,
         "password": password,
-      });
+      }, SetOptions(merge: true));
 
       // Upload FCM token
       if (Get.isRegistered<NotificationService>()) {
@@ -1436,6 +1547,14 @@ class AuthController extends GetxController with WidgetsBindingObserver {
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green.withValues(alpha: 0.9),
         colorText: Colors.white,
+        titleText: const Text(
+          "Success",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+            fontSize: 15,
+          ),
+        ),
       );
 
       Get.offAll(() => const HomeScreenView());
@@ -1468,7 +1587,94 @@ class AuthController extends GetxController with WidgetsBindingObserver {
       isLoading.value = false;
     }
   }
+
+  // Delete Account
+  Future<void> deleteAccount({bool showSnackbar = true}) async {
+    try {
+      isLoading.value = true;
+      // 1. Clear session variables/state
+      isSignUpMode.value = true;
+      obscurePin.value = true;
+      obscurePassword.value = true;
+      isCheckingUsername.value = false;
+      isUsernameUnique.value = null;
+      isDobValid.value = null;
+      userRole.value = "";
+      userName.value = "";
+      signupEmail.value = "";
+      signupPin.value = "";
+
+      // 2. Call backend delete account API
+      log("Calling delete account API...");
+      try {
+        await AuthRepo.deleteAccount();
+      } catch (e) {
+        log("Backend delete account failed (or network error): $e");
+      }
+
+      // 3. Delete Firebase User and Firestore document if exists
+      try {
+        final String? email = SharedPrefHelper.getString("email");
+        if (email != null && email.isNotEmpty) {
+          await FirebaseFirestore.instance.collection('users').doc(email).delete();
+          log("Firestore user document deleted.");
+        }
+        
+        final currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser != null) {
+          await currentUser.delete();
+          log("Firebase Auth user deleted.");
+        }
+      } catch (e) {
+        log("Error deleting firebase user/document: $e");
+      }
+
+      // 4. Sign out from Firebase and Google (just in case)
+      try {
+        await FirebaseAuth.instance.signOut();
+        final GoogleSignIn googleSignIn = GoogleSignIn();
+        if (await googleSignIn.isSignedIn()) {
+          await googleSignIn.signOut();
+        }
+      } catch (e) {
+        log("Error signing out during account deletion: $e");
+      }
+
+      // 5. Disconnect Socket
+      try {
+        if (Get.isRegistered<SocketService>()) {
+          // Add disconnect logic here if needed, or rely on clear()
+        }
+      } catch (e) {
+        log("Socket disconnect error: $e");
+      }
+
+      // 6. Clear local storage
+      await SharedPrefHelper.clear();
+
+      if (showSnackbar) {
+        Get.snackbar(
+          "Account Deleted",
+          "Your account has been deleted successfully",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green.withValues(alpha: 0.9),
+          colorText: Colors.white,
+        );
+      }
+
+      // 7. Navigate to login
+      Get.offAll(() => const LoginScreenView());
+    } catch (e) {
+      log("Error during account deletion: $e");
+      Get.snackbar(
+        "Error",
+        "Failed to delete account: $e",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
 }
-
-
-

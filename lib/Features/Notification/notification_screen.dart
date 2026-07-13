@@ -56,7 +56,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         ),
         title: const CommonText.h2(
           "Notifications",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.w500),
         ),
         actions: [
           Obx(() {
@@ -66,7 +66,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 icon: const Icon(Icons.done_all, color: CommonColor.blue, size: 18),
                 label: const Text(
                   "Read All",
-                  style: TextStyle(color: CommonColor.blue, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: CommonColor.blue, fontWeight: FontWeight.normal),
                 ),
               );
             }
@@ -168,7 +168,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 15,
-                                        fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
+                                        fontWeight: isRead ? FontWeight.normal : FontWeight.normal,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -236,7 +236,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
             const SizedBox(height: 24),
             const CommonText.h2(
               "No Notifications",
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(fontWeight: FontWeight.normal),
             ),
             const SizedBox(height: 8),
             CommonText.body(

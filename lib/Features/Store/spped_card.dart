@@ -70,7 +70,7 @@
 //                         discountText!,
 //                         style: const TextStyle(
 //                           fontSize: 9,
-//                           fontWeight: FontWeight.bold,
+//                           fontWeight: FontWeight.normal,
 //                         ),
 //                       ),
 //                     ),
@@ -93,7 +93,7 @@
 //                     style: const TextStyle(
 //                       color: CommonColor.orange,
 //                       fontSize: 13,
-//                       fontWeight: FontWeight.bold,
+//                       fontWeight: FontWeight.normal,
 //                     ),
 //                   ),
 //                 ],
@@ -114,7 +114,7 @@
 //                     style: const TextStyle(
 //                       color: CommonColor.orange,
 //                       fontSize: 13,
-//                       fontWeight: FontWeight.bold,
+//                       fontWeight: FontWeight.normal,
 //                     ),
 //                   ),
 //                 ],
@@ -187,101 +187,72 @@ class SpeedCard extends StatelessWidget {
 
             children: [
 
-              // Speed + Discount
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-
-                  Expanded(
-                    child: CommonText.h3(
-                      speedText,
-                      style: const TextStyle(
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-
-                  if (discountText != null) ...[
-
-                    const SizedBox(width: 4),
-
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-
-                      decoration: BoxDecoration(
-                        color: CommonColor.blue,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-
-                      child: CommonText.small(
-                        discountText!,
-                        style: const TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+              // Speed
+              CommonText.h3(
+                speedText,
+                style: const TextStyle(
+                  fontSize: 18,
+                ),
               ),
 
+              const SizedBox(height: 2),
 
-              // APR
+              // Estimate Profit
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   const CommonText.small(
-                    "APR",
+                    "Estimate Profit",
                     style: TextStyle(
                       color: Colors.grey,
-                      fontSize: 10,
+                      fontSize: 12,
                     ),
                   ),
-
+                  const SizedBox(height: 2),
                   CommonText.body(
-                    aprValue,
+                    discountText ?? "",
                     style: const TextStyle(
                       color: CommonColor.orange,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      fontWeight: FontWeight.normal,
                     ),
                   ),
                 ],
               ),
 
+              const Spacer(),
 
-              // Free CPU Power
+              // Plan
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   const CommonText.small(
-                    "Free CPU Power",
+                    "Plan",
                     style: TextStyle(
                       color: Colors.grey,
-                      fontSize: 10,
+                      fontSize: 12,
                     ),
                   ),
-
+                  const SizedBox(height: 2),
                   CommonText.body(
-                    freeCpuValue,
+                    speedText.contains("10 GH/s") ? "Free Plan" : "Home Plan",
                     style: const TextStyle(
                       color: CommonColor.orange,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      fontWeight: FontWeight.normal,
                     ),
                   ),
                 ],
               ),
 
+              const SizedBox(height: 2),
 
               // Price
               CommonText.h3(
                 price,
+                style: const TextStyle(
+                  fontSize: 18,
+                ),
               ),
             ],
           ),

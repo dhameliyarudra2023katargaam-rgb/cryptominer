@@ -7,11 +7,7 @@ import '../Features/Home/home_model.dart';
 class MiningRepo {
   /// Get Mining Configuration
   static Future<Map<String, dynamic>?> getMiningConfig() async {
-    final String? token = SharedPrefHelper.getString("token");
     Map<String, String> headers = {};
-    if (token != null && token.isNotEmpty) {
-      headers = {"Authorization": "Bearer $token"};
-    }
     var response = await ApiService().getResponse(
       apiType: APIType.aGet,
       url: "${ApiConst.baseUrl}/admin/mining/config",
@@ -46,11 +42,7 @@ class MiningRepo {
 
   /// Get Admin User Sessions
   static Future<Map<String, dynamic>?> getAdminMiningSessions({int page = 1, int limit = 10}) async {
-    final String? token = SharedPrefHelper.getString("token");
     Map<String, String> headers = {};
-    if (token != null && token.isNotEmpty) {
-      headers = {"Authorization": "Bearer $token"};
-    }
     var response = await ApiService().getResponse(
       apiType: APIType.aGet,
       url: "${ApiConst.baseUrl}/admin/mining/sessions?page=$page&limit=$limit",
@@ -65,11 +57,7 @@ class MiningRepo {
 
   /// Get Ad Token
   static Future<Map<String, dynamic>?> getAdToken() async {
-    final String? token = SharedPrefHelper.getString("token");
     Map<String, String> headers = {};
-    if (token != null && token.isNotEmpty) {
-      headers = {"Authorization": "Bearer $token"};
-    }
     var response = await ApiService().getResponse(
       apiType: APIType.aGet,
       url: "${ApiConst.baseUrl}${ApiConst.adTokenApi}",
@@ -127,11 +115,7 @@ class MiningRepo {
 
   /// Get Mining Status
   static Future<Map<String, dynamic>?> getMiningStatus() async {
-    final String? token = SharedPrefHelper.getString("token");
     Map<String, String> headers = {};
-    if (token != null && token.isNotEmpty) {
-      headers = {"Authorization": "Bearer $token"};
-    }
     var response = await ApiService().getResponse(
       apiType: APIType.aGet,
       url: "${ApiConst.baseUrl}${ApiConst.miningStatusApi}",
@@ -146,11 +130,7 @@ class MiningRepo {
 
   /// Get Mining History
   static Future<Map<String, dynamic>?> getMiningHistory() async {
-    final String? token = SharedPrefHelper.getString("token");
     Map<String, String> headers = {};
-    if (token != null && token.isNotEmpty) {
-      headers = {"Authorization": "Bearer $token"};
-    }
     var response = await ApiService().getResponse(
       apiType: APIType.aGet,
       url: "${ApiConst.baseUrl}${ApiConst.miningHistoryApi}",
@@ -165,11 +145,7 @@ class MiningRepo {
 
   /// Get User Dashboard
   static Future<Map<String, dynamic>?> getUserDashboard() async {
-    final String? token = SharedPrefHelper.getString("token");
     Map<String, String> headers = {};
-    if (token != null && token.isNotEmpty) {
-      headers = {"Authorization": "Bearer $token"};
-    }
     var response = await ApiService().getResponse(
       apiType: APIType.aGet,
       url: "${ApiConst.baseUrl}${ApiConst.dashboardApi}",

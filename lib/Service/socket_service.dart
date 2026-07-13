@@ -11,6 +11,8 @@ import '../Features/Home/home_model.dart';
 import 'notification_service.dart';
 import '../Features/Home/home_controller.dart';
 import '../Features/AdminMining/admin_mining_config_controller.dart';
+import '../Utility/app_snackbar.dart';
+import '../Utility/mining_calc_helper.dart';
 
 class SocketService extends GetxService with WidgetsBindingObserver {
   io.Socket? _socket;
@@ -143,6 +145,7 @@ class SocketService extends GetxService with WidgetsBindingObserver {
           } else {
             currentEarned.value = serverEarned.toString();
           }
+          dev.log("🟢 [SOCKET SYNC] Live Count updated to: ${currentEarned.value}");
         }
 
         currentSpeed.value = data['currentSpeed']?.toString() ?? "0.0";
@@ -211,13 +214,18 @@ class SocketService extends GetxService with WidgetsBindingObserver {
     dev.log("📱 SocketService: AppLifecycleState changed to: $state");
     if (state == AppLifecycleState.resumed) {
       final String? token = SharedPrefHelper.getString("token");
-      if (token != null && token.isNotEmpty && status.value == "MINING") {
-        dev.log("📱 SocketService: App resumed while mining. Reconnecting/resubscribing socket...");
+      if (token != null && token.isNotEmpty) {
+        dev.log("📱 SocketService: App resumed. Refreshing mining status...");
         fetchMiningStatus();
-        if (_socket != null && _socket!.connected) {
-          subscribeMining();
-        } else {
-          connectSocket();
+        if (Get.isRegistered<HomeController>()) {
+          Get.find<HomeController>().fetchDashboardData();
+        }
+        if (status.value == "MINING") {
+          if (_socket != null && _socket!.connected) {
+            subscribeMining();
+          } else {
+            connectSocket();
+          }
         }
       }
     }
@@ -254,6 +262,34 @@ class SocketService extends GetxService with WidgetsBindingObserver {
     _localMiningTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (remainingTime.value > 0) {
         remainingTime.value--;
+        
+        // Increment live count based on mining per second
+        double speedGh = 0.0;
+        if (Get.isRegistered<HomeController>()) {
+          speedGh = Get.find<HomeController>().effectiveMiningSpeed;
+        } else {
+          speedGh = double.tryParse(currentSpeed.value) ?? 0.0;
+        }
+        if (speedGh > 0.0) {
+          double increment = MiningCalcHelper.getBtcPerSecond(speedGh);
+          
+          double currentVal = double.tryParse(currentEarned.value) ?? 0.0;
+          currentVal += increment;
+          currentEarned.value = currentVal.toStringAsFixed(18);
+
+
+/// live count
+          double totalVal = double.tryParse(currentMiningBalance.value) ?? 0.0;
+          if (totalVal > 0.0) {
+            totalVal += increment;
+            currentMiningBalance.value = totalVal.toStringAsFixed(18);
+          }
+
+          // Only log every 5 seconds to avoid spamming the console
+          if (remainingTime.value % 5 == 0) {
+            dev.log("⏱️ [LOCAL TIMER] Live Count ticking: +$increment -> ${currentEarned.value}");
+          }
+        }
       } else {
         timer.cancel();
         dev.log("⏰ 24-Hour Timer finished! Auto-stopping...");
@@ -273,6 +309,13 @@ class SocketService extends GetxService with WidgetsBindingObserver {
       addLog("🛑 Auto-stopping mining session (24h expired)...");
       await MiningRepo.stopMining();
       addLog("⏰ Auto-stop API called.");
+
+      if (Get.isRegistered<NotificationService>()) {
+        Get.find<NotificationService>().showInstantNotification(
+          title: "Session Completed",
+          body: "Your mining session is complete! Start a new session now.",
+        );
+      }
 
       isMiningLoading.value = false;
       // Wait 1.5 seconds and fetch status to get latest balance
@@ -313,14 +356,14 @@ class SocketService extends GetxService with WidgetsBindingObserver {
           currentSpeed.value = startResponse.data!.session!.miningSpeed;
         }
 
-        Get.snackbar(
-          "Success",
-          startResponse.message.isNotEmpty ? startResponse.message : "Mining session started successfully!",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withValues(alpha: 0.9),
-          colorText: Colors.white,
-        );
         addLog("🚀 Mining session started successfully!");
+        
+        if (Get.isRegistered<NotificationService>()) {
+          Get.find<NotificationService>().showInstantNotification(
+            title: "Success",
+            body: startResponse.message.isNotEmpty ? startResponse.message : "Mining session started successfully!",
+          );
+        }
 
         // Wait 1.5 seconds for the server to process the start request before updating status
         Future.delayed(const Duration(milliseconds: 1500), () {
@@ -333,12 +376,8 @@ class SocketService extends GetxService with WidgetsBindingObserver {
         status.value = "IDLE";
         disconnectSocket();
 
-        Get.snackbar(
-          "Error",
+        AppSnackbar.error(
           startResponse?.message ?? "Failed to start mining session",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-          colorText: Colors.white,
         );
         addLog("❌ Start mining failed: ${startResponse?.message}");
       }
@@ -350,13 +389,7 @@ class SocketService extends GetxService with WidgetsBindingObserver {
 
       dev.log("Error starting mining session: $e");
       addLog("❌ Error: $e");
-      Get.snackbar(
-        "Error",
-        "Something went wrong while starting mining",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-        colorText: Colors.white,
-      );
+      AppSnackbar.error("Something went wrong while starting mining");
     } finally {
       isMiningLoading.value = false;
     }
@@ -385,23 +418,19 @@ class SocketService extends GetxService with WidgetsBindingObserver {
       addLog("🛑 Stopping mining session...");
       final StopMiningResponse? stopResponse = await MiningRepo.stopMining();
       if (stopResponse != null && stopResponse.success == true) {
-        Get.snackbar(
-          "Success",
-          stopResponse.message.isNotEmpty ? stopResponse.message : "Mining session stopped.",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.blue.withValues(alpha: 0.9),
-          colorText: Colors.white,
-        );
         addLog("🛑 Mining session stopped.");
+
+        if (Get.isRegistered<NotificationService>()) {
+          Get.find<NotificationService>().showInstantNotification(
+            title: "Stopped",
+            body: stopResponse.message.isNotEmpty ? stopResponse.message : "Mining session stopped.",
+          );
+        }
       } else {
         // Just log the error (e.g. 'No active mining session') but don't block the client reset
         addLog("⚠️ Server stop message: ${stopResponse?.message}");
-        Get.snackbar(
-          "Error",
+        AppSnackbar.error(
           stopResponse?.message ?? "Failed to stop mining session",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-          colorText: Colors.white,
         );
       }
       isMiningLoading.value = false;
@@ -431,8 +460,13 @@ class SocketService extends GetxService with WidgetsBindingObserver {
             (response['message']?.toString().toLowerCase().contains("token") == true ||
              response['message']?.toString().toLowerCase().contains("jwt") == true ||
              response['message']?.toString().toLowerCase().contains("unauthorized") == true)) {
-          dev.log("🚨 Token expired/invalid inside fetchMiningStatus. Logging out...");
-          Get.find<AuthController>().logout();
+        
+        /// auto logout 
+        // Get.find<AuthController>().logout();
+          // Get.find<AuthController>().logout();
+        
+          dev.log("🚨 Token expired/invalid inside fetchMiningStatus. Skipping auto-logout.");
+          // return;
           return;
         }
 
@@ -446,8 +480,10 @@ class SocketService extends GetxService with WidgetsBindingObserver {
 
           // Map the retrieved status keys directly to the reactive observables
           if (data != null && data is Map) {
-            final serverMiningBalance = data['currentMiningBalance'] ?? data['miningBalance'];
-            final serverEarned = data['currentEarned'] ?? data['earned'];
+            final sessionObj = data['session'];
+            
+            final serverMiningBalance = data['currentMiningBalance'] ?? data['miningBalance'] ?? sessionObj?['currentMiningBalance'] ?? sessionObj?['miningBalance'];
+            final serverEarned = data['currentEarned'] ?? data['earned'] ?? sessionObj?['currentEarned'] ?? sessionObj?['earned'];
 
             double baseBal = 0.0;
             if (serverMiningBalance != null) {
@@ -468,14 +504,15 @@ class SocketService extends GetxService with WidgetsBindingObserver {
               } else {
                 currentEarned.value = serverEarned.toString();
               }
+              dev.log("🔵 [API SYNC] Live Count fetched as: ${currentEarned.value}");
             }
 
-            final serverSpeed = data['currentSpeed'] ?? data['speed'];
+            final serverSpeed = data['currentSpeed'] ?? data['speed'] ?? data['miningSpeed'] ?? sessionObj?['currentSpeed'] ?? sessionObj?['speed'] ?? sessionObj?['miningSpeed'];
             if (serverSpeed != null) {
               currentSpeed.value = serverSpeed.toString();
             }
 
-            final serverStatus = data['status'];
+            final serverStatus = data['status'] ?? sessionObj?['status'];
             if (serverStatus != null) {
               final String serverStatusStr = serverStatus.toString();
               if (serverStatusStr == "MINING") {
@@ -487,8 +524,8 @@ class SocketService extends GetxService with WidgetsBindingObserver {
 
             // Calculate total session duration dynamically
             int sessionDuration = 86400; // default 24h
-            dynamic rawStart = data['startTime'] ?? data['session']?['startTime'];
-            dynamic rawEnd = data['endTime'] ?? data['session']?['endTime'];
+            dynamic rawStart = data['startTime'] ?? sessionObj?['startTime'];
+            dynamic rawEnd = data['endTime'] ?? sessionObj?['endTime'];
             if (rawStart != null && rawEnd != null) {
               final start = DateTime.tryParse(rawStart.toString());
               final end = DateTime.tryParse(rawEnd.toString());
@@ -496,7 +533,7 @@ class SocketService extends GetxService with WidgetsBindingObserver {
                 sessionDuration = end.difference(start).inSeconds;
               }
             } else {
-              dynamic rawDuration = data['durationHours'] ?? data['session']?['durationHours'];
+              dynamic rawDuration = data['durationHours'] ?? sessionObj?['durationHours'];
               if (rawDuration != null) {
                 final parsed = int.tryParse(rawDuration.toString());
                 if (parsed != null) {
@@ -508,7 +545,7 @@ class SocketService extends GetxService with WidgetsBindingObserver {
               totalSessionDuration.value = sessionDuration;
             }
 
-            final serverRemaining = data['remainingTime'] ?? data['timeRemaining'];
+            final serverRemaining = data['remainingTime'] ?? data['timeRemaining'] ?? sessionObj?['remainingTime'] ?? sessionObj?['timeRemaining'];
             if (serverRemaining != null) {
               int timeInSeconds = 0;
               if (serverRemaining is int) {
@@ -551,9 +588,14 @@ class SocketService extends GetxService with WidgetsBindingObserver {
             (response['message']?.toString().toLowerCase().contains("token") == true ||
              response['message']?.toString().toLowerCase().contains("jwt") == true ||
              response['message']?.toString().toLowerCase().contains("unauthorized") == true)) {
-          dev.log("🚨 Token expired/invalid inside fetchMiningHistory. Logging out...");
-          Get.find<AuthController>().logout();
-          return;
+           
+           /// auto logout 
+          //    Get.find<AuthController>().logout();
+          // dev.log("🚨 Token expired/invalid inside fetchMiningHistory. Logging out.");
+          // return;
+          // Get.find<AuthController>().logout();
+          dev.log("🚨 Token expired/invalid inside fetchMiningHistory. Skipping auto-logout.");
+          // return;
         }
 
         if (response['success'] == true) {

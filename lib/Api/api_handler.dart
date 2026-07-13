@@ -302,15 +302,37 @@ class TokenRefreshInterceptor extends dio.Interceptor {
   }
 
   void _handleLogout() {
-    if (Get.isRegistered<AuthController>()) {
-      Get.find<AuthController>().logout();
-    } else {
-      SharedPrefHelper.remove("token");
-      SharedPrefHelper.remove("refreshToken");
-      SharedPrefHelper.remove("userId");
-      SharedPrefHelper.remove("email");
-      SharedPrefHelper.remove("name");
-      SharedPrefHelper.remove("hasMpin");
-    }
+    
+    
+    
+    /// auto logout 
+    
+    // //    if (Get.isRegistered<AuthController>()) {
+    // //   Get.find<AuthController>().logout();
+    // // } else {
+    // //   SharedPrefHelper.remove("token");
+    // //   SharedPrefHelper.remove("refreshToken");
+    // //   SharedPrefHelper.remove("userId");
+    // //   SharedPrefHelper.remove("email");
+    // //   SharedPrefHelper.remove("name");
+    // //   SharedPrefHelper.remove("hasMpin");
+    // // }
+    // log("🔑 TokenRefreshInterceptor: Auto-logout disabled. Skipping automatic logout.");
+    // auto logout
+   
+   
+    // if (Get.isRegistered<AuthController>()) {
+    //   Get.find<AuthController>().logout();
+    // } else {
+    //   SharedPrefHelper.remove("token");
+    //   SharedPrefHelper.remove("refreshToken");
+    //   SharedPrefHelper.remove("userId");
+    //   SharedPrefHelper.remove("email");
+    //   SharedPrefHelper.remove("name");
+    //   SharedPrefHelper.remove("hasMpin");
+    // }
+
+    // start mining session button error
+    log("🔑 TokenRefreshInterceptor: User logged out due to session expiration.");
   }
 }

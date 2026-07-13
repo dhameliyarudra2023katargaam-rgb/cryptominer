@@ -1,16 +1,21 @@
-import 'package:cryptominer/Features/Store/store_screen_controller.dart';
+import 'package:cryptominer/Features/Store/create_miner_screen.dart';
 import 'package:cryptominer/Features/Store/spped_card.dart';
+import 'package:cryptominer/Features/Store/store_screen_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../Service/Ads/native_ads_service.dart';
+import '../../Utility/app_custom_dialog.dart';
+import '../../Utility/app_snackbar.dart';
 import '../../Utility/black_card.dart';
 import '../../Utility/common_color.dart';
 import '../../Utility/common_next_arrow_icon.dart';
 import '../../Utility/common_text.dart';
 import '../../Utility/custom_appbar.dart';
 import '../../Utility/font_style.dart';
-import '../../Utility/yellow_card.dart';
-import 'store_model.dart';
 import 'my_miner_screen.dart';
+// import '../../Utility/yellow_card.dart'; // Boost button commented out
+import 'store_model.dart';
 
 class StoreScreenView extends StatelessWidget {
   const StoreScreenView({super.key});
@@ -20,19 +25,29 @@ class StoreScreenView extends StatelessWidget {
     // Register controller if not already registered
     final StoreController controller = Get.put(StoreController());
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const CustomAppBar(
+    return Column(
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 0, left: 20, right: 20),
+          child: CustomAppBar(
             title: "Store",
             fontSize: 26,
             leading: SizedBox(width: 48),
             actions: [SizedBox(width: 48)],
           ),
-          const SizedBox(height: 24),
+        ),
+        const SizedBox(height: 6),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
 
           // ── Active Mining Power Card ──────────────────────────────────────
           Obx(() {
@@ -90,6 +105,8 @@ class StoreScreenView extends StatelessWidget {
                                           ),
                                         )
                                       : RichText(
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                           text: TextSpan(
                                             children: [
                                               TextSpan(
@@ -123,34 +140,37 @@ class StoreScreenView extends StatelessWidget {
               ),
             );
           }),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
           // ── Ads Banner ───────────────────────────────────────────────────
-          Align(
-            alignment: Alignment.center,
-            child: Container(
-              width: 347,
-              height: 50,
-              decoration: BoxDecoration(
-                color: CommonColor.darkRed.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: CommonText.small(
-                  "ADS BANNER",
-                  style: const TextStyle(
-                    color: CommonColor.red,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
+          const Center(child: AppNativeAd()),
+          const SizedBox(height: 18),
 
           // ── Speed Section Title ───────────────────────────────────────────
-          const CommonText.h1("Speed"),
+          Row(
+            children: [
+              const CommonText.h2(
+                "Speed- Hash Rate",
+                style: TextStyle(fontWeight: FontWeight.normal),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () {
+                  AppCustomDialog.show(
+                    context: context,
+                    title: "Mining Speed",
+                    message:
+                        "Estimated mining speed is dynamic and may increase or decrease based on network conditions, device performance, and server activity. This is normal app behavior.",
+                  );
+                },
+                child: const Icon(
+                  Icons.info_outline_rounded,
+                  color: Colors.grey,
+                  size: 20,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
 
           // ── Speed Plan Cards (dynamic from API) ───────────────────────────
@@ -200,7 +220,15 @@ class StoreScreenView extends StatelessWidget {
                           discountText: plan1.discountText,
                           onTap: () {
                             controller.selectPlan(i);
-                            _showPurchaseDialog(context, controller, plan1);
+                            Get.to(
+                              () => const CreateMinerScreen(),
+                              arguments: {
+                                'speed': plan1.miningSpeed,
+                                'id': plan1.id,
+                              },
+                              transition: Transition.rightToLeft,
+                              duration: const Duration(milliseconds: 300),
+                            );
                           },
                         )),
                     const SizedBox(width: 14),
@@ -218,8 +246,15 @@ class StoreScreenView extends StatelessWidget {
                               discountText: plan2.discountText,
                               onTap: () {
                                 controller.selectPlan(i + 1);
-                                _showPurchaseDialog(
-                                    context, controller, plan2);
+                                Get.to(
+                                  () => const CreateMinerScreen(),
+                                  arguments: {
+                                    'speed': plan2.miningSpeed,
+                                    'id': plan2.id,
+                                  },
+                                  transition: Transition.rightToLeft,
+                                  duration: const Duration(milliseconds: 300),
+                                );
                               },
                             ))
                         : const Expanded(child: SizedBox()),
@@ -234,33 +269,76 @@ class StoreScreenView extends StatelessWidget {
 
             return Column(children: rows);
           }),
-          const SizedBox(height: 40),
+          const SizedBox(height: 24),
 
-          // ── Boost Button ─────────────────────────────────────────────────
-          YellowCard(
-            onTap: () {
-              // Boost: ad-token → show rewarded ad → start mining
-              // This flow is handled in the Home/Mining controller
-            },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.smart_display_rounded,
+          // ── Boost Button (commented out - moved to Home screen) ───────────
+          // YellowCard(
+          //   onTap: () {
+          //     // Boost: ad-token → show rewarded ad → start mining
+          //     // This flow is handled in the Home/Mining controller
+          //   },
+          //   child: Row(
+          //     mainAxisAlignment: MainAxisAlignment.center,
+          //     children: [
+          //       const Icon(Icons.smart_display_rounded, color: Colors.white, size: 20),
+          //       const SizedBox(width: 8),
+          //       CommonText.h3("Boost ( 5Min )", style: const TextStyle(fontSize: 18)),
+          //     ],
+          //   ),
+          // ),
+          // const SizedBox(height: 14),
+
+          // ── Purchase Button (opens Create Minor screen) ───────────────────
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: () {
+                final int idx = controller.selectedPlanIndex.value;
+                if (idx >= 0 && idx < controller.plans.length) {
+                  Get.to(
+                    () => const CreateMinerScreen(),
+                    arguments: {
+                      'speed': controller.plans[idx].miningSpeed,
+                      'id': controller.plans[idx].id,
+                    },
+                    transition: Transition.rightToLeft,
+                    duration: const Duration(milliseconds: 300),
+                  );
+                } else {
+                  Get.to(
+                    () => const CreateMinerScreen(),
+                    transition: Transition.rightToLeft,
+                    duration: const Duration(milliseconds: 300),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: CommonColor.blue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                "Purchase",
+                style: TextStyle(
                   color: Colors.white,
-                  size: 20,
+                  fontWeight: FontWeight.normal,
+                  fontSize: 17,
                 ),
-                const SizedBox(width: 8),
-                CommonText.h3(
-                  "Boost ( 5Min )",
-                  style: const TextStyle(fontSize: 18),
-                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
               ],
             ),
           ),
-          const SizedBox(height: 14),
         ],
       ),
+      ),
+      ),
+      ],
     );
   }
 
@@ -325,7 +403,7 @@ class StoreScreenView extends StatelessWidget {
                     "Buy Now",
                     style: TextStyle(
                       color: CommonColor.orange,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.normal,
                     ),
                   ),
                 )),

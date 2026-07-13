@@ -71,6 +71,21 @@ class StoreRepo {
   }
 
   // ───────────────────────────────────────────────────────────────────────────
+  // GET /mining/start (Free Mining Data)
+  // ───────────────────────────────────────────────────────────────────────────
+  static Future<Map<String, dynamic>?> getFreeMiningData() async {
+    final response = await ApiService().getResponse(
+      apiType: APIType.aGet,
+      url: "${ApiConst.baseUrl}${ApiConst.startMiningApi}",
+      header: _authHeader(),
+    );
+    print("StoreRepo: getFreeMiningData response success: ${response?['success']}");
+    log("Get Free Mining Data Response: $response");
+    if (response is Map<String, dynamic>) return response;
+    return null;
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
   // GET /subscriptions/history
   // Returns paginated list of past subscriptions
   // ───────────────────────────────────────────────────────────────────────────

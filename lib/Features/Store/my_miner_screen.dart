@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../Utility/app_snackbar.dart';
 import '../../Utility/black_card.dart';
 import '../../Utility/common_color.dart';
 import '../../Utility/common_text.dart';
 import '../../Utility/custom_appbar.dart';
+import '../../Service/Ads/banner_ads_service.dart';
 import 'store_screen_controller.dart';
 import 'store_model.dart';
+import 'plan_details_screen.dart';
+import '../Home/home_controller.dart';
 
 class MyMinerScreen extends StatefulWidget {
   const MyMinerScreen({super.key});
@@ -25,6 +29,7 @@ class _MyMinerScreenState extends State<MyMinerScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.fetchCurrentSubscription();
       controller.fetchSubscriptionPlans();
+      controller.fetchFreeMiningData();
     });
   }
 
@@ -110,7 +115,7 @@ class _MyMinerScreenState extends State<MyMinerScreen> {
                     "Buy Now",
                     style: TextStyle(
                       color: CommonColor.orange,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.normal,
                     ),
                   ),
                 )),
@@ -128,7 +133,7 @@ class _MyMinerScreenState extends State<MyMinerScreen> {
           children: [
             const CustomAppBar(
               title: "My Miner",
-              fontSize: 26,
+              fontSize: 24,
             ),
             Expanded(
               child: SingleChildScrollView(
@@ -162,7 +167,7 @@ class _MyMinerScreenState extends State<MyMinerScreen> {
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
-                                    fontWeight: isPaidSelected ? FontWeight.bold : FontWeight.normal,
+                                    fontWeight: isPaidSelected ? FontWeight.normal : FontWeight.normal,
                                   ),
                                 ),
                               ),
@@ -182,7 +187,7 @@ class _MyMinerScreenState extends State<MyMinerScreen> {
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
-                                    fontWeight: !isPaidSelected ? FontWeight.bold : FontWeight.normal,
+                                    fontWeight: !isPaidSelected ? FontWeight.normal : FontWeight.normal,
                                   ),
                                 ),
                               ),
@@ -209,111 +214,138 @@ class _MyMinerScreenState extends State<MyMinerScreen> {
                           );
                         }
 
-                        String speedText = "100 Th/s";
-                        String profitText = "37.31%";
-                        String expiryText = "25th Jun, 2026";
-                        String actionText = "Buy Now";
+                        if (sub == null) {
+                          return Container(
+                            width: double.infinity,
+                            height: 155,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.white12),
+                            ),
+                            alignment: Alignment.center,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.info_outline, color: Colors.grey, size: 32),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  "No Active Plan",
+                                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.normal),
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  "Choose a plan from below to get started",
+                                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        // We have an active subscription
+                        String speedText = "${sub.miningSpeed.toStringAsFixed(0)} Th/s";
+                        final matchedPlan = controller.plans.firstWhereOrNull((p) => p.name == sub.planName);
+                        String profitText = "${matchedPlan?.aprPercent.toStringAsFixed(2) ?? "0.00"}%";
+                        String expiryText = _formatDate(sub.endDate);
+                        String actionText = "Renew";
                         VoidCallback onActionTap = () {
-                          // Open purchase dialog for first plan as default action
-                          if (controller.plans.isNotEmpty) {
-                            _showPurchaseDialog(context, controller.plans.first);
+                          if (matchedPlan != null) {
+                            _showPurchaseDialog(context, matchedPlan);
                           } else {
-                            Get.snackbar("Notice", "Please choose a plan from the list below.");
+                            AppSnackbar.notice("Cannot determine plan template for renewal.");
                           }
                         };
 
-                        if (sub != null) {
-                          speedText = "${sub.miningSpeed.toStringAsFixed(0)} Th/s";
-                          final matchedPlan = controller.plans.firstWhereOrNull((p) => p.name == sub.planName);
-                          profitText = "${matchedPlan?.aprPercent.toStringAsFixed(2) ?? "37.31"}%";
-                          expiryText = _formatDate(sub.endDate);
-                          actionText = "Renew";
-                          onActionTap = () {
-                            if (matchedPlan != null) {
-                              _showPurchaseDialog(context, matchedPlan);
-                            } else {
-                              Get.snackbar("Notice", "Cannot determine plan template for renewal.");
-                            }
-                          };
-                        }
-
-                        return GradientBorderContainer(
-                          width: double.infinity,
-                          height: 155,
-                          borderRadius: 16,
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        "Speed CPU Power",
-                                        style: TextStyle(color: Colors.grey, fontSize: 13),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        speedText,
-                                        style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  ),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        "Estimate Profit",
-                                        style: TextStyle(color: Colors.grey, fontSize: 13),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        profitText,
-                                        style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                        return GestureDetector(
+                          onTap: () {
+                            Get.to(
+                              () => PlanDetailsScreen(
+                                speed: speedText,
+                                profit: profitText,
                               ),
-                              const Divider(color: Colors.white12, height: 1),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        "Expires on",
-                                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        expiryText,
-                                        style: const TextStyle(color: CommonColor.orange, fontSize: 14, fontWeight: FontWeight.w600),
-                                      ),
-                                    ],
-                                  ),
-                                  GestureDetector(
-                                    onTap: onActionTap,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        color: CommonColor.orange,
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Text(
-                                        actionText,
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                              transition: Transition.rightToLeft,
+                              duration: const Duration(milliseconds: 300),
+                            );
+                          },
+                          child: GradientBorderContainer(
+                            width: double.infinity,
+                            height: 155,
+                            borderRadius: 16,
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          "Speed CPU Power",
+                                          style: TextStyle(color: Colors.grey, fontSize: 13),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          speedText,
+                                          style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.normal),
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          "Estimate Profit",
+                                          style: TextStyle(color: Colors.grey, fontSize: 13),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          profitText,
+                                          style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.normal),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const Divider(color: Colors.white12, height: 1),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          "Expires on",
+                                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          expiryText,
+                                          style: const TextStyle(color: CommonColor.orange, fontSize: 14, fontWeight: FontWeight.normal),
+                                        ),
+                                      ],
+                                    ),
+                                    GestureDetector(
+                                      onTap: onActionTap,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: CommonColor.orange,
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                        child: Text(
+                                          actionText,
+                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.normal, fontSize: 13),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       }),
@@ -324,7 +356,7 @@ class _MyMinerScreenState extends State<MyMinerScreen> {
                         "Suggest Miner",
                         style: TextStyle(
                           fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.normal,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -370,169 +402,140 @@ class _MyMinerScreenState extends State<MyMinerScreen> {
                         );
                       }),
                     ] else ...[
-                      // --- Free Tab Two Cards ---
-                      // Card 1: Base Free Miner
-                      GradientBorderContainer(
-                        width: double.infinity,
-                        height: 155,
-                        borderRadius: 16,
-                        padding: const EdgeInsets.all(16),
-                        child: const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Speed CPU Power",
-                                      style: TextStyle(color: Colors.grey, fontSize: 13),
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      "100 Th/s",
-                                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Estimate Profit",
-                                      style: TextStyle(color: Colors.grey, fontSize: 13),
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      "+15 %",
-                                      style: TextStyle(color: CommonColor.orange, fontSize: 20, fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            Divider(color: Colors.white12, height: 1),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Expires on",
-                                      style: TextStyle(color: Colors.grey, fontSize: 12),
-                                    ),
-                                    SizedBox(height: 2),
-                                    Text(
-                                      "Free",
-                                      style: TextStyle(color: CommonColor.orange, fontSize: 14, fontWeight: FontWeight.w600),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(width: 48), // Spacer to keep layout balanced
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 14),
+                      // --- Free Tab Active Plan ---
+                      Obx(() {
+                        final homeCtrl = Get.find<HomeController>();
+                        final speed = homeCtrl.effectiveFreeMiningSpeed.toStringAsFixed(1);
+                        final isBoosting = homeCtrl.isBoosting.value;
+                        final boostTime = homeCtrl.boostRemainingSeconds.value;
+                        
+                        String expiryText = "Unlimited";
+                        if (isBoosting && boostTime > 0) {
+                          int minutes = boostTime ~/ 60;
+                          int seconds = boostTime % 60;
+                          expiryText = "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
+                        }
 
-                      // Card 2: Boost Free Miner
-                      GradientBorderContainer(
-                        width: double.infinity,
-                        height: 155,
-                        borderRadius: 16,
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        return Column(
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Speed CPU Power",
-                                      style: TextStyle(color: Colors.grey, fontSize: 13),
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      "10 Th/s",
-                                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                                const Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Estimate Profit",
-                                      style: TextStyle(color: Colors.grey, fontSize: 13),
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      "+1.5 %",
-                                      style: TextStyle(color: CommonColor.orange, fontSize: 20, fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const Divider(color: Colors.white12, height: 1),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Expires on",
-                                      style: TextStyle(color: Colors.grey, fontSize: 12),
-                                    ),
-                                    SizedBox(height: 2),
-                                    Text(
-                                      "5 min",
-                                      style: TextStyle(color: CommonColor.orange, fontSize: 14, fontWeight: FontWeight.w600),
-                                    ),
-                                  ],
-                                ),
-                                GestureDetector(
-                                  onTap: () {
-                                    Get.snackbar(
-                                      "Boost Activated 🚀",
-                                      "Your free miner speed has been boosted by +10 Th/s!",
-                                      snackPosition: SnackPosition.BOTTOM,
-                                      backgroundColor: CommonColor.blue,
-                                      colorText: Colors.white,
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: CommonColor.blue,
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: const Text(
-                                      "Boost Again",
-                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                                    ),
+                            GestureDetector(
+                              onTap: () {
+                                Get.to(
+                                  () => PlanDetailsScreen(
+                                    speed: "$speed GH/s",
+                                    profit: "Free",
                                   ),
+                                  transition: Transition.rightToLeft,
+                                  duration: const Duration(milliseconds: 300),
+                                );
+                              },
+                              child: GradientBorderContainer(
+                                width: double.infinity,
+                                height: 155,
+                                borderRadius: 16,
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              "Speed CPU Power",
+                                              style: TextStyle(color: Colors.grey, fontSize: 13),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              "$speed GH/s",
+                                              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.normal),
+                                            ),
+                                          ],
+                                        ),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                             // 2 => 1st changes
+                                              //  "Plan Type",
+                                              "Estimate Profit",
+                                              style: TextStyle(color: Colors.grey, fontSize: 13),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              // 2 => 1st changes
+                                              //  isBoosting ? "Boosted" : "Free Basic",
+                                              "+${homeCtrl.miningConfig['freeApr'] ?? '1.5'}%",
+                                              style: const TextStyle(color: CommonColor.orange, fontSize: 18, fontWeight: FontWeight.normal),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    const Divider(color: Colors.white12, height: 1),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              isBoosting ? "Boost Expires in" : "Expires on",
+                                              style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              expiryText,
+                                              style: const TextStyle(color: CommonColor.orange, fontSize: 14, fontWeight: FontWeight.normal),
+                                            ),
+                                          ],
+                                        ),
+                                        if (!isBoosting)
+                                          GestureDetector(
+                                            onTap: () {
+                                              homeCtrl.triggerBoost();
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                              decoration: BoxDecoration(
+                                                color: CommonColor.blue,
+                                                borderRadius: BorderRadius.circular(16),
+                                              ),
+                                              child: const Text(
+                                                "Boost Speed",
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        else
+                                          const Text(
+                                            "Active",
+                                            style: TextStyle(
+                                              color: Colors.greenAccent,
+                                              fontWeight: FontWeight.normal,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
                           ],
-                        ),
-                      ),
+                        );
+                      }),
                     ],
                   ],
                 ),
               ),
             ),
+            const AppBanner(),
           ],
         ),
       ),
@@ -563,7 +566,7 @@ class SuggestMinerCard extends StatelessWidget {
         children: [
           Text(
             "${plan.miningSpeed.toStringAsFixed(0)} Th/s",
-            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.normal),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -575,7 +578,7 @@ class SuggestMinerCard extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 "+${plan.aprPercent.toStringAsFixed(1)}%",
-                style: const TextStyle(color: CommonColor.orange, fontSize: 13, fontWeight: FontWeight.bold),
+                style: const TextStyle(color: CommonColor.orange, fontSize: 13, fontWeight: FontWeight.normal),
               ),
             ],
           ),
@@ -589,7 +592,7 @@ class SuggestMinerCard extends StatelessWidget {
               const SizedBox(height: 2),
               const Text(
                 "90 Days",
-                style: TextStyle(color: CommonColor.orange, fontSize: 13, fontWeight: FontWeight.bold),
+                style: TextStyle(color: CommonColor.orange, fontSize: 13, fontWeight: FontWeight.normal),
               ),
             ],
           ),
@@ -605,7 +608,7 @@ class SuggestMinerCard extends StatelessWidget {
               alignment: Alignment.center,
               child: Text(
                 "₹${plan.price.toStringAsFixed(2)}",
-                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.normal),
               ),
             ),
           ),

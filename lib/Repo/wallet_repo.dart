@@ -6,13 +6,7 @@ import '../Service/storage_service.dart';
 class WalletRepo {
   /// Get Wallet Balance
   static Future<Map<String, dynamic>?> getWalletBalance() async {
-    final String? token = SharedPrefHelper.getString("token");
     Map<String, String> headers = {};
-    if (token != null && token.isNotEmpty) {
-      headers = {
-        "Authorization": "Bearer $token",
-      };
-    }
     var response = await ApiService().getResponse(
       apiType: APIType.aGet,
       url: "${ApiConst.baseUrl}${ApiConst.walletBalanceApi}",
@@ -27,13 +21,7 @@ class WalletRepo {
 
   /// Get Wallet Transactions
   static Future<Map<String, dynamic>?> getWalletTransactions() async {
-    final String? token = SharedPrefHelper.getString("token");
     Map<String, String> headers = {};
-    if (token != null && token.isNotEmpty) {
-      headers = {
-        "Authorization": "Bearer $token",
-      };
-    }
     var response = await ApiService().getResponse(
       apiType: APIType.aGet,
       url: "${ApiConst.baseUrl}${ApiConst.walletTransactionsApi}",
@@ -70,13 +58,7 @@ class WalletRepo {
 
   /// Get Withdrawal History
   static Future<Map<String, dynamic>?> getWithdrawalHistory() async {
-    final String? token = SharedPrefHelper.getString("token");
     Map<String, String> headers = {};
-    if (token != null && token.isNotEmpty) {
-      headers = {
-        "Authorization": "Bearer $token",
-      };
-    }
     var response = await ApiService().getResponse(
       apiType: APIType.aGet,
       url: "${ApiConst.baseUrl}${ApiConst.withdrawalsHistoryApi}",

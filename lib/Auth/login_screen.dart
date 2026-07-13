@@ -5,7 +5,7 @@ import '../Utility/black_card.dart';
 import 'auth_controller.dart';
 import '../Utility/common_color.dart';
 import '../Utility/common_text.dart';
-import '../Utility/picture_path.dart';
+import '../Utility/image_const.dart';
 import 'email_signup_screen.dart';
 
 class LoginScreenView extends StatelessWidget {
@@ -63,7 +63,7 @@ class LoginScreenView extends StatelessWidget {
                 "CryptoMiner",
                 style: TextStyle(
                   fontSize: 38,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.normal,
                   letterSpacing: 1.5,
                 ),
               ),
@@ -105,7 +105,7 @@ class LoginScreenView extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               SvgPicture.asset(
-                                PicturePath.googleIcon,
+                                ImageConst.googleIcon,
                                 width: 22,
                                 height: 22,
                               ),
@@ -114,7 +114,7 @@ class LoginScreenView extends StatelessWidget {
                                 "Continue with Google",
                                 style: TextStyle(
                                   fontSize: 16,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.normal,
                                 ),
                               ),
                             ],
@@ -157,7 +157,7 @@ class LoginScreenView extends StatelessWidget {
                         "Sign Up with Email/Password",
                         style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.normal,
                         ),
                       ),
                     ],

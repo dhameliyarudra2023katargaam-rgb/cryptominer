@@ -20,7 +20,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 class NotificationService extends GetxService {
   static NotificationService get to => Get.find();
 
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  FirebaseMessaging get _fcm => FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
   final RxList<NotificationModel> notifications = <NotificationModel>[].obs;
@@ -34,14 +34,28 @@ class NotificationService extends GetxService {
     } catch (e) {
       dev.log("⚠️ Timezone localization error: $e");
     }
-    await _initLocalNotifications();
-    await _initFcm();
+    
+    try {
+      await _initLocalNotifications();
+    } catch (e) {
+      dev.log("⚠️ Local Notifications initialization error: $e");
+    }
+
+    try {
+      await _initFcm();
+    } catch (e) {
+      dev.log("⚠️ FCM initialization error: $e");
+    }
 
     final String? token = SharedPrefHelper.getString("token");
     if (token != null && token.isNotEmpty) {
-      fetchUnreadCount();
-      fetchNotifications();
-      uploadFcmToken();
+      try {
+        fetchUnreadCount();
+        fetchNotifications();
+        uploadFcmToken();
+      } catch (e) {
+        dev.log("⚠️ Error during initial notification fetch/upload: $e");
+      }
     }
     return this;
   }
@@ -56,7 +70,9 @@ class NotificationService extends GetxService {
     try {
       dev.log("Uploading FCM Token to backend...");
       final response = await AuthRepo.updateProfile({
-        "fcmToken": fcmToken,
+        // fcm token error
+          "fcmToken": fcmToken,
+        
         "deviceToken": fcmToken,
       });
       dev.log("FCM Token upload response success: ${response.isSuccess}, message: ${response.message}");
@@ -186,8 +202,9 @@ class NotificationService extends GetxService {
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
-    // Cancel any existing scheduled notification with ID 999 to prevent duplicates
+    // Cancel any existing scheduled notifications to prevent duplicates
     await _localNotifications.cancel(999);
+    await _localNotifications.cancel(998);
 
     try {
       await _localNotifications.zonedSchedule(
@@ -217,11 +234,65 @@ class NotificationService extends GetxService {
         dev.log("⚠️ Inexact fallback failed: $ex");
       }
     }
+
+    // Schedule 12-hour notification if duration is longer than 12 hours (43200 seconds)
+    if (durationSeconds > 43200) {
+      try {
+        await _localNotifications.zonedSchedule(
+          998,
+          'Mining Session Update',
+          '12 hours of your mining session have completed successfully!',
+          tz.TZDateTime.now(tz.local).add(const Duration(hours: 12)),
+          platformChannelSpecifics,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        );
+        dev.log("ℹ️ Scheduled 12-hour completion notification successfully.");
+      } catch (e) {
+        dev.log("⚠️ Error scheduling 12-hour notification: $e. Trying inexact fallback...");
+        try {
+          await _localNotifications.zonedSchedule(
+            998,
+            'Mining Session Update',
+            '12 hours of your mining session have completed successfully!',
+            tz.TZDateTime.now(tz.local).add(const Duration(hours: 12)),
+            platformChannelSpecifics,
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          );
+          dev.log("ℹ️ Scheduled inexact 12-hour completion notification successfully.");
+        } catch (ex) {
+          dev.log("⚠️ 12-hour fallback failed: $ex");
+        }
+      }
+    }
   }
 
   Future<void> cancelMiningCompletionNotification() async {
     dev.log("Cancelling scheduled mining notification...");
     await _localNotifications.cancel(999);
+    await _localNotifications.cancel(998);
+  }
+
+  Future<void> showInstantNotification({required String title, required String body}) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'instant_notifications_channel',
+      'Instant Notifications',
+      channelDescription: 'Triggered for instant app events like starting mining',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+    );
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await _localNotifications.show(
+      DateTime.now().millisecond,
+      title,
+      body,
+      platformChannelSpecifics,
+    );
   }
 
   // --- API CALLS ---

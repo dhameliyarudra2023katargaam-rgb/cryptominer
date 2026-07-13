@@ -112,7 +112,7 @@
 //                         "Privacy Policy & User Agreement",
 //                         style: TextStyle(
 //                           color: CommonColor.blue,
-//                           fontWeight: FontWeight.bold,
+//                           fontWeight: FontWeight.normal,
 //                         ),
 //                       ),
 //                     ),
@@ -162,7 +162,7 @@
 //                         "Log In",
 //                         style: TextStyle(
 //                           color: CommonColor.blue,
-//                           fontWeight: FontWeight.bold,
+//                           fontWeight: FontWeight.normal,
 //                         ),
 //                       ),
 //                     ),

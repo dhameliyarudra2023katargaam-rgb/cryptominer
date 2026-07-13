@@ -52,6 +52,17 @@ class EmailSignUpScreen extends GetView<AuthController> {
         return;
       }
 
+      if (controller.isDobValid.value == false) {
+        Get.snackbar(
+          "Invalid Age",
+          "You must be at least 18 years old to sign up",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+          colorText: Colors.white,
+        );
+        return;
+      }
+
       if (password.isEmpty || password.length < 6) {
         Get.snackbar(
           "Invalid Password",
@@ -103,18 +114,23 @@ class EmailSignUpScreen extends GetView<AuthController> {
       body: SafeArea(
         child: Column(
           children: [
-            Obx(() => CustomAppBar(
-                  title: controller.isSignUpMode.value ? "Sign Up" : "Sign In",
-                  fontSize: 24,
-                )),
+            Padding(
+              padding: const EdgeInsets.only(top: 0, left: 20, right: 20),
+              child: Obx(() => CustomAppBar(
+                    title: controller.isSignUpMode.value ? "Sign Up" : "Sign In",
+                    titleWidth: 228,
+                    titleHeight: 24,
+                    fontSize: 24,
+                    fontWeight: FontWeight.normal,
+                  )),
+            ),
+            const SizedBox(height: 24),
             Expanded(
               child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 20),
 
                     // Toggle Tabs (Sign Up vs Sign In)
                     Obx(() => Row(
@@ -144,7 +160,7 @@ class EmailSignUpScreen extends GetView<AuthController> {
                                           ? Colors.white
                                           : Colors.white.withValues(alpha: 0.4),
                                       fontWeight: controller.isSignUpMode.value
-                                          ? FontWeight.bold
+                                          ? FontWeight.normal
                                           : FontWeight.normal,
                                     ),
                                   ),
@@ -176,7 +192,7 @@ class EmailSignUpScreen extends GetView<AuthController> {
                                           ? Colors.white
                                           : Colors.white.withValues(alpha: 0.4),
                                       fontWeight: !controller.isSignUpMode.value
-                                          ? FontWeight.bold
+                                          ? FontWeight.normal
                                           : FontWeight.normal,
                                     ),
                                   ),
@@ -279,6 +295,19 @@ class EmailSignUpScreen extends GetView<AuthController> {
                               onPressed: () => controller.selectDate(context),
                             ),
                           ),
+                          if (controller.isDobValid.value == false) ...[
+                            const SizedBox(height: 6),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 4.0),
+                              child: Text(
+                                "You must be at least 18 years old",
+                                style: TextStyle(
+                                  color: CommonColor.red,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 24),
 
                           // Password
@@ -373,7 +402,7 @@ class EmailSignUpScreen extends GetView<AuthController> {
                               : CommonText.h3(
                                   controller.isSignUpMode.value ? "Verify Email" : "Sign In",
                                   style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.normal,
                                   ),
                                 ),
                         ),
@@ -393,7 +422,7 @@ class EmailSignUpScreen extends GetView<AuthController> {
                                   : "Don't have an account? Sign Up",
                               style: const TextStyle(
                                 color: CommonColor.blue,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.normal,
                               ),
                             )),
                       ),

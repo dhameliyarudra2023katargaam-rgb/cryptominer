@@ -1,4 +1,4 @@
-import 'package:cryptominer/Utility/picture_path.dart';
+import 'package:cryptominer/Utility/image_const.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -17,23 +17,27 @@ class CustomBottomNavigationBar extends StatelessWidget {
 
     final List<NavigationItem> items = [
       NavigationItem(
-        iconPath: PicturePath.homeIcon,
+        iconPath: ImageConst.homeIcon,
+        activeIconPath: ImageConst.homeFillIcon,
         label: 'Home',
       ),
       NavigationItem(
-        iconPath: PicturePath.storeIcon,
+        iconPath: ImageConst.storeIcon,
+        activeIconPath: ImageConst.storeFillIcon,
         label: 'Store',
       ),
+      // NavigationItem(
+      //   iconPath: PicturePath.menuIcon,
+      //   label: 'Menu',
+      // ),
       NavigationItem(
-        iconPath: PicturePath.menuIcon,
-        label: 'Menu',
-      ),
-      NavigationItem(
-        iconPath: PicturePath.walletIcon,
+        iconPath: ImageConst.walletIcon,
+        activeIconPath: ImageConst.walletFillIcon,
         label: 'Wallet',
       ),
       NavigationItem(
-        iconPath: PicturePath.myAccountIcon,
+        iconPath: ImageConst.myAccountIcon,
+        activeIconPath: ImageConst.profileFillIcon,
         label: 'Profile',
       ),
     ];
@@ -87,7 +91,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           SvgPicture.asset(
-                            item.iconPath,
+                            (isSelected && item.activeIconPath != null) ? item.activeIconPath! : item.iconPath,
                             width: 24,
                             height: 24,
                             colorFilter: const ColorFilter.mode(
@@ -101,7 +105,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
                               item.label,
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.normal,
                               ),
                             ),
                           ],
@@ -121,7 +125,8 @@ class CustomBottomNavigationBar extends StatelessWidget {
 
 class NavigationItem {
   final String iconPath;
+  final String? activeIconPath;
   final String label;
 
-  NavigationItem({required this.iconPath, required this.label});
+  NavigationItem({required this.iconPath, this.activeIconPath, required this.label});
 }

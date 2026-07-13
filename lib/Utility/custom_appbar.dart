@@ -20,7 +20,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.titleWidth = 210,
     this.titleHeight = 24,
     this.fontSize = 24,
-    this.fontWeight = FontWeight.w600,
+    this.fontWeight = FontWeight.w500,
   });
 
   @override

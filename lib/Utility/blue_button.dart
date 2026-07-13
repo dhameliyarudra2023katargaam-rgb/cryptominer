@@ -39,7 +39,7 @@ class BlueButton extends StatelessWidget {
             CommonText.body(
               text,
               style: const TextStyle(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.normal,
               ),
             ),
             if (subtitle != null) ...[

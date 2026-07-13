@@ -9,6 +9,7 @@ import '../../Utility/common_color.dart';
 import '../../Utility/custom_appbar.dart';
 import '../../Utility/font_style.dart';
 import '../Home/home_screen.dart';
+import '../../Service/Ads/ad_service.dart';
 
 class ProfileMpinController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
@@ -50,6 +51,10 @@ class ProfileMpinController extends GetxController {
         // Pins match, call API
         final success = await _authController.createMpin(currentInput.value);
         if (success) {
+          await AdService.instance.showAd(
+            adType: 'interstitial',
+            retryOnFailure: true,
+          );
           Get.offAll(() => const HomeScreenView(initialIndex: 4));
         } else {
           _resetPinFlow();
@@ -87,7 +92,7 @@ class MpinScreen extends StatelessWidget {
       backgroundColor: CommonColor.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
+          physics: const NeverScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -96,7 +101,7 @@ class MpinScreen extends StatelessWidget {
                     title: controller.isConfirming.value ? "Confirm MPIN" : "Create MPIN",
                     fontSize: 24,
                   )),
-              const SizedBox(height: 50),
+              const SizedBox(height: 30),
 
               Icon(
                 Icons.lock_outline_rounded,
@@ -131,7 +136,7 @@ class MpinScreen extends StatelessWidget {
                   "Forgot PIN?",
                   style: CommonFontStyles.body.copyWith(
                     color: CommonColor.blue,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.normal,
                   ),
                 ),
               ),

@@ -7,7 +7,7 @@ import '../../Utility/common_copy_clipboard.dart';
 import '../../Utility/common_text.dart';
 import '../../Utility/custom_appbar.dart';
 import '../../Utility/font_style.dart';
-import '../../Utility/picture_path.dart';
+import '../../Utility/image_const.dart';
 
 class WithdrawalStatusScreen extends StatelessWidget {
   final String network;
@@ -54,7 +54,7 @@ class WithdrawalStatusScreen extends StatelessWidget {
                       ),
                       alignment: Alignment.center,
                       child: SvgPicture.asset(
-                        PicturePath.pendingIcon,
+                        ImageConst.pendingIcon,
                         width: 54,
                         height: 54,
                         fit: BoxFit.contain,
@@ -67,7 +67,7 @@ class WithdrawalStatusScreen extends StatelessWidget {
                       "Pending",
                       style: TextStyle(
                         fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.normal,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -75,7 +75,7 @@ class WithdrawalStatusScreen extends StatelessWidget {
                       "We will process it",
                       style: TextStyle(
                         fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.normal,
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -123,7 +123,7 @@ class WithdrawalStatusScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14,
                               color: CommonColor.blue,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.normal,
                               fontFamily: CommonFontStyles.fontFamily,
                               height: 1.4,
                             ),
@@ -182,7 +182,7 @@ class WithdrawalStatusScreen extends StatelessWidget {
                     );
                   },
                   child: SvgPicture.asset(
-                    PicturePath.copyIcon,
+                    ImageConst.copyIcon,
                     width: 16,
                     height: 16,
                     colorFilter: const ColorFilter.mode(

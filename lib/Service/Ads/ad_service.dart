@@ -18,22 +18,12 @@ class AdService {
     _isAdLoadingOrShowing = true;
 
     try {
-      Future<bool> adFuture;
       if (adType.toLowerCase() == 'interstitial') {
-        adFuture = _showInterstitialAd(retryOnFailure);
+        return await _showInterstitialAd(retryOnFailure);
       } else {
         // Default to rewarded ad
-        adFuture = _showRewardedAd(retryOnFailure);
+        return await _showRewardedAd(retryOnFailure);
       }
-
-      // Timeout loading after 8 seconds to prevent hanging
-      return await adFuture.timeout(
-        const Duration(seconds: 8),
-        onTimeout: () {
-          dev.log("⏰ AdService: Ad loading timed out.");
-          return false;
-        },
-      );
     } catch (e) {
       dev.log("❌ AdService Error showing ad: $e");
       return false;

@@ -31,7 +31,7 @@ class GradientBorderContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
+    Widget content = CustomPaint(
       foregroundPainter: _GradientBorderPainter(
         strokeWidth: strokeWidth,
         borderRadius: borderRadius,
@@ -40,7 +40,6 @@ class GradientBorderContainer extends StatelessWidget {
       child: Container(
         width: width,
         height: height,
-        margin: margin,
         padding: padding,
         alignment: alignment,
         decoration: BoxDecoration(
@@ -50,6 +49,15 @@ class GradientBorderContainer extends StatelessWidget {
         child: child,
       ),
     );
+
+    if (margin != null) {
+      content = Padding(
+        padding: margin!,
+        child: content,
+      );
+    }
+
+    return content;
   }
 }
 

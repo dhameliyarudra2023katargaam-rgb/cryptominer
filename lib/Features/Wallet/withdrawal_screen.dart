@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'wallet_controller.dart';
+import '../../Service/Ads/banner_ads_service.dart';
 
 import '../../Utility/black_card.dart';
 import '../../Utility/blue_card.dart';
@@ -11,7 +12,8 @@ import '../../Utility/common_text.dart';
 import '../../Utility/common_textfield.dart';
 import '../../Utility/custom_appbar.dart';
 import '../../Utility/font_style.dart';
-import '../../Utility/picture_path.dart';
+import '../../Utility/image_const.dart';
+import '../../Utility/app_snackbar.dart';
 
 class WithdrawalScreen extends StatefulWidget {
   const WithdrawalScreen({super.key});
@@ -21,7 +23,7 @@ class WithdrawalScreen extends StatefulWidget {
 }
 
 class _WithdrawalScreenState extends State<WithdrawalScreen> {
-  String _selectedMethod = 'Lighting address';
+  final String _selectedMethod = 'Lighting address';
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final WalletController walletController = Get.find<WalletController>();
@@ -40,14 +42,20 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const CustomAppBar(
-              title: "Withdrawal",
-              fontSize: 26,
+            const Padding(
+              padding: EdgeInsets.only(top: 0, left: 20, right: 20),
+              child: CustomAppBar(
+                title: "Claim Reward",
+                titleWidth: 228,
+                titleHeight: 24,
+                fontSize: 24,
+                // fontWeight: FontWeight.normal,
+              ),
             ),
+            const SizedBox(height: 8),
             Expanded(
               child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -57,7 +65,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                       child: Text(
                         "Virtual Balance",
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: 20,
                           fontWeight: FontWeight.normal,
                           color: Colors.white,
                           fontFamily: CommonFontStyles.fontFamily,
@@ -75,8 +83,8 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                         return Text(
                           displayBalance,
                           style: const TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                            fontWeight: FontWeight.normal,
                             color: Colors.white,
                             fontFamily: CommonFontStyles.fontFamily,
                           ),
@@ -101,14 +109,14 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
                     // Select Collection Wallet Label
                     const CommonText.h2(
                       "Select Collection wallet",
                       style: TextStyle(
                         fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.normal,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -123,7 +131,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                         child: Row(
                           children: [
                             SvgPicture.asset(
-                              PicturePath.btcWalletIcon,
+                              ImageConst.btcWalletIcon,
                               width: 32,
                               height: 32,
                               fit: BoxFit.contain,
@@ -203,128 +211,51 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
+
+                    // Address Label
+                    const CommonText.h3(
+                      "Wallet Address",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // Address Input Box
+                    Align(
+                      alignment: Alignment.center,
+                      child: GradientBorderContainer(
+                        width: 370,
+                        height: 55,
+                        borderRadius: 16,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        child: Center(
+                          child: CommonTextField(
+                            controller: _addressController,
+                            borderless: true,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontFamily: CommonFontStyles.fontFamily,
+                            ),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                              hintText: "Enter your wallet address",
+                              hintStyle: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 16,
+                                fontFamily: CommonFontStyles.fontFamily,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 32),
-
-                    // History Title
-                    const CommonText.h1(
-                      "History",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Today Title
-                    const CommonText.h2(
-                      "Today",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    Obx(() {
-                      if (walletController.isLoadingWithdrawalHistory.value) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(vertical: 24.0),
-                            child: CircularProgressIndicator(color: CommonColor.orange),
-                          ),
-                        );
-                      }
-                      final list = walletController.withdrawalHistory;
-                      if (list.isEmpty) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 24.0),
-                          child: Center(
-                            child: CommonText.body(
-                              "No withdrawal history found",
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                        );
-                      }
-                      return Column(
-                        children: List.generate(list.length, (index) {
-                          final item = list[index];
-                          final type = item['type']?.toString() ?? "Mining reward";
-                          final status = item['status']?.toString() ?? "Pending";
-                          final rawAmount = item['amount']?.toString() ?? "0.00000000";
-                          final double parsedAmount = double.tryParse(rawAmount) ?? 0.0;
-                          final String amount = parsedAmount.toStringAsFixed(11);
-                          final isPending = status.toLowerCase() == "pending";
-
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12.0),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: isPending 
-                                        ? const Color(0xFFEB4335).withValues(alpha: 0.1) 
-                                        : const Color(0xFF00A713).withValues(alpha: 0.1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: SvgPicture.asset(
-                                    isPending ? PicturePath.redArchiveIcon : PicturePath.archiveDownIcon,
-                                    width: 24,
-                                    height: 24,
-                                    fit: BoxFit.contain,
-                                    colorFilter: isPending
-                                        ? null
-                                        : const ColorFilter.mode(
-                                            CommonColor.green,
-                                            BlendMode.srcIn,
-                                          ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          CommonText.h3(
-                                            type,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          CommonText.h3(
-                                            amount,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.normal,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 2),
-                                      CommonText.body(
-                                        status,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: isPending ? CommonColor.orange : CommonColor.green,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }),
-                      );
-                    }),
-                    const SizedBox(height: 40),
 
                     // Withdrawal button
                     Align(
@@ -374,13 +305,24 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                                   return;
                                 }
 
-                                const String dummyAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
-                                walletController.submitWithdrawal(amount, dummyAddress, _selectedMethod).then((success) {
+                                String address = _addressController.text.trim();
+                                if (address.isEmpty) {
+                                  Get.snackbar(
+                                    "Required",
+                                    "Please enter your wallet address",
+                                    snackPosition: SnackPosition.BOTTOM,
+                                    backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+                                    colorText: Colors.white,
+                                  );
+                                  return;
+                                }
+
+                                walletController.submitWithdrawal(amount, address, _selectedMethod).then((success) {
                                   if (success) {
                                     Get.to(
                                       () => WithdrawalStatusScreen(
                                         network: _selectedMethod,
-                                        address: dummyAddress,
+                                        address: address,
                                         amount: amountText,
                                         initiationTime: DateTime.now().toLocal().toString().substring(0, 19),
                                         withdrawId: walletController.lastWithdrawalId.value,
@@ -392,10 +334,10 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                                 });
                               },
                               child: const CommonText.h2(
-                                "Withdrawal",
+                                "Claim Rewards!",
                                 style: TextStyle(
                                   fontSize: 20,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.normal,
                                   color: Colors.white,
                                 ),
                               ),
@@ -406,53 +348,9 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                 ),
               ),
             ),
+            const AppBanner(),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildRadioButton(String value) {
-    final bool isSelected = _selectedMethod == value;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedMethod = value;
-        });
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isSelected ? CommonColor.blue : Colors.white,
-                width: 2,
-              ),
-            ),
-            padding: const EdgeInsets.all(4),
-            child: isSelected
-                ? Container(
-              decoration: const BoxDecoration(
-                color: CommonColor.blue,
-                shape: BoxShape.circle,
-              ),
-            )
-                : null,
-          ),
-          const SizedBox(width: 8),
-          CommonText.h2(
-            value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
       ),
     );
   }

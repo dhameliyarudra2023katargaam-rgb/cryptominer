@@ -1,8 +1,10 @@
 import 'dart:developer';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../Repo/auth_repo.dart';
 import '../Service/storage_service.dart';
+import '../Utility/app_snackbar.dart';
 import '../Utility/common_dialog.dart';
 import 'auth_model.dart';
 import 'login_screen.dart';
@@ -62,13 +64,21 @@ class MpinController extends GetxController {
       if (responseModel.isSuccess == true) {
         await SharedPrefHelper.setBool("hasMpin", true);
         isSessionUnlocked = true;
-        Get.snackbar(
-          "Success",
-          responseModel.message ?? "MPIN set successfully!",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withValues(alpha: 0.9),
-          colorText: Colors.white,
-        );
+        
+        // Sync MPIN to Firestore
+        final String? email = SharedPrefHelper.getString("email");
+        if (email != null && email.isNotEmpty) {
+          try {
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(email.trim().toLowerCase())
+                .set({"mpin": mpin}, SetOptions(merge: true));
+          } catch (e) {
+            log("Firestore mpin update failed: $e");
+          }
+        }
+
+        AppSnackbar.success(responseModel.message ?? "MPIN set successfully!");
         return true;
       } else {
         // Fallback to createMpin in case the endpoint routes vary
@@ -76,22 +86,24 @@ class MpinController extends GetxController {
         if (fallbackModel.isSuccess == true) {
           await SharedPrefHelper.setBool("hasMpin", true);
           isSessionUnlocked = true;
-          Get.snackbar(
-            "Success",
-            fallbackModel.message ?? "MPIN set successfully!",
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green.withValues(alpha: 0.9),
-            colorText: Colors.white,
-          );
+          
+          // Sync MPIN to Firestore
+          final String? email = SharedPrefHelper.getString("email");
+          if (email != null && email.isNotEmpty) {
+            try {
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(email.trim().toLowerCase())
+                  .set({"mpin": mpin}, SetOptions(merge: true));
+            } catch (e) {
+              log("Firestore mpin update failed: $e");
+            }
+          }
+
+          AppSnackbar.success(fallbackModel.message ?? "MPIN set successfully!");
           return true;
         }
-        Get.snackbar(
-          "Error",
-          fallbackModel.message ?? responseModel.message ?? "Failed to set MPIN",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-          colorText: Colors.white,
-        );
+        AppSnackbar.error(fallbackModel.message ?? responseModel.message ?? "Failed to set MPIN");
         return false;
       }
     } catch (e) {
@@ -123,35 +135,17 @@ class MpinController extends GetxController {
         if (responseModel.data?.token != null) {
           await SharedPrefHelper.setString("token", responseModel.data!.token!);
         }
-        Get.snackbar(
-          "Unlocked",
-          responseModel.message ?? "Welcome back!",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withValues(alpha: 0.9),
-          colorText: Colors.white,
-        );
+        AppSnackbar.success(responseModel.message ?? "Welcome back!", title: "Unlocked");
         await SharedPrefHelper.setBool("hasMpin", true);
         isSessionUnlocked = true;
         return true;
       } else {
-        Get.snackbar(
-          "Unlock Failed",
-          responseModel.message ?? "Invalid MPIN",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-          colorText: Colors.white,
-        );
+        AppSnackbar.error(responseModel.message ?? "Invalid MPIN", title: "Unlock Failed");
         return false;
       }
     } catch (e) {
       log("Error verifying MPIN: $e");
-      Get.snackbar(
-        "Error",
-        "Something went wrong while unlocking",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-        colorText: Colors.white,
-      );
+      AppSnackbar.error("Something went wrong while unlocking");
       return false;
     } finally {
       isLoading.value = false;
@@ -162,13 +156,7 @@ class MpinController extends GetxController {
   Future<bool> requestForgotPasswordOtp() async {
     final String email = emailController.text.trim();
     if (email.isEmpty || !GetUtils.isEmail(email)) {
-      Get.snackbar(
-        "Invalid Email",
-        "Please enter a valid email address",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-        colorText: Colors.white,
-      );
+      AppSnackbar.error("Please enter a valid email address", title: "Invalid Email");
       return false;
     }
 
@@ -186,24 +174,12 @@ class MpinController extends GetxController {
         );
         return true;
       } else {
-        Get.snackbar(
-          "Error",
-          responseModel.message ?? "Failed to request OTP",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-          colorText: Colors.white,
-        );
+        AppSnackbar.error(responseModel.message ?? "Failed to request OTP");
         return false;
       }
     } catch (e) {
       log("Error requesting Forgot Password OTP: $e");
-      Get.snackbar(
-        "Error",
-        "Something went wrong",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-        colorText: Colors.white,
-      );
+      AppSnackbar.error("Something went wrong");
       return false;
     } finally {
       isLoading.value = false;
@@ -262,24 +238,12 @@ class MpinController extends GetxController {
         );
         return true;
       } else {
-        Get.snackbar(
-          "Error",
-          responseModel.message ?? "Failed to reset password",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-          colorText: Colors.white,
-        );
+        AppSnackbar.error(responseModel.message ?? "Failed to reset password");
         return false;
       }
     } catch (e) {
       log("Error resetting password via OTP: $e");
-      Get.snackbar(
-        "Error",
-        "Something went wrong",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-        colorText: Colors.white,
-      );
+      AppSnackbar.error("Something went wrong");
       return false;
     } finally {
       isLoading.value = false;
@@ -334,24 +298,12 @@ class MpinController extends GetxController {
         );
         return true;
       } else {
-        Get.snackbar(
-          "Error",
-          responseModel.message ?? "Failed to reset PIN",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-          colorText: Colors.white,
-        );
+        AppSnackbar.error(responseModel.message ?? "Failed to reset PIN");
         return false;
       }
     } catch (e) {
       log("Error resetting MPIN directly: $e");
-      Get.snackbar(
-        "Error",
-        "Something went wrong",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-        colorText: Colors.white,
-      );
+      AppSnackbar.error("Something went wrong");
       return false;
     } finally {
       isLoading.value = false;

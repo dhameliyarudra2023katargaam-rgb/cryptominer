@@ -38,7 +38,7 @@ class AdminMiningConfigScreen extends StatelessWidget {
                       const CommonText.h3(
                         "Configure Mining Parameters",
                         style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
+                            color: Colors.white, fontWeight: FontWeight.normal),
                       ),
                       const SizedBox(height: 16),
 
@@ -107,7 +107,7 @@ class AdminMiningConfigScreen extends StatelessWidget {
                       const CommonText.h3(
                         "Recent User Mining Sessions",
                         style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
+                            color: Colors.white, fontWeight: FontWeight.normal),
                       ),
                       const SizedBox(height: 12),
 
@@ -178,7 +178,7 @@ class AdminMiningConfigScreen extends StatelessWidget {
                                           "User: $userId",
                                           style: const TextStyle(
                                             color: Colors.white,
-                                            fontWeight: FontWeight.bold,
+                                            fontWeight: FontWeight.normal,
                                             fontSize: 13,
                                           ),
                                           overflow: TextOverflow.ellipsis,
@@ -212,7 +212,7 @@ class AdminMiningConfigScreen extends StatelessWidget {
                                                     ? Colors.green
                                                     : Colors.grey,
                                             fontSize: 10,
-                                            fontWeight: FontWeight.bold,
+                                            fontWeight: FontWeight.normal,
                                           ),
                                         ),
                                       ),
@@ -252,7 +252,7 @@ class AdminMiningConfigScreen extends StatelessWidget {
                                             style: const TextStyle(
                                                 color: Colors.white70,
                                                 fontSize: 12,
-                                                fontWeight: FontWeight.bold),
+                                                fontWeight: FontWeight.normal),
                                           ),
                                         ],
                                       ),

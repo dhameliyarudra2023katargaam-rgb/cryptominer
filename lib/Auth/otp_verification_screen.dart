@@ -40,7 +40,7 @@ class OtpVerificationScreen extends StatelessWidget {
                     CommonText.h2(
                       "Check your email",
                       style: const TextStyle(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.normal,
                         fontSize: 22,
                       ),
                     ),
@@ -54,7 +54,7 @@ class OtpVerificationScreen extends StatelessWidget {
                             color: Colors.white.withValues(alpha: 0.6),
                             fontSize: 16,
                             height: 1.5,
-                            fontFamily: 'Gayathri',
+                            fontFamily: 'Poppins',
                           ),
                           children: [
                             const TextSpan(text: "We have sent a confirmation email to\n"),
@@ -62,7 +62,7 @@ class OtpVerificationScreen extends StatelessWidget {
                               text: controller.signupEmail.value,
                               style: const TextStyle(
                                 color: CommonColor.blue,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.normal,
                               ),
                             ),
                             const TextSpan(
@@ -89,7 +89,7 @@ class OtpVerificationScreen extends StatelessWidget {
                       child: const CommonText.h3(
                         "Continue",
                         style: TextStyle(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.normal,
                         ),
                       ),
                     ),
@@ -104,7 +104,7 @@ class OtpVerificationScreen extends StatelessWidget {
                         "Resend Confirmation Email",
                         style: TextStyle(
                           color: CommonColor.blue,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.normal,
                         ),
                       ),
                     ),

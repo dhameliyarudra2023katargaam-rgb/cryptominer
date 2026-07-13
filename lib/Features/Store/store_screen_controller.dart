@@ -1,7 +1,9 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../Utility/app_snackbar.dart';
 import '../../Repo/store_repo.dart';
+import '../../Repo/home_screen_mining_repo.dart';
 import 'store_model.dart';
 
 class StoreController extends GetxController {
@@ -34,13 +36,38 @@ class StoreController extends GetxController {
     fetchAllStoreData();
   }
 
-  /// Convenience: fetch plans + current subscription together on screen open
   Future<void> fetchAllStoreData() async {
     await Future.wait([
       fetchSubscriptionPlans(),
       fetchCurrentSubscription(),
       fetchSubscriptionHistory(),
+      fetchFreeMiningData(),
     ]);
+  }
+
+  // ─── GET /mining/start ────────────────────────────────────────────────
+  final RxMap<String, dynamic> freeMiningData = <String, dynamic>{}.obs;
+  final RxBool isLoadingFreeMining = false.obs;
+
+  Future<void> fetchFreeMiningData() async {
+    try {
+      isLoadingFreeMining.value = true;
+      final response = await StoreRepo.getFreeMiningData();
+      if (response != null && response['success'] == true) {
+        final data = response['data'];
+        if (data is List && data.isNotEmpty) {
+          freeMiningData.value = data[0] as Map<String, dynamic>;
+          log("Fetched free mining data (from list): ${freeMiningData.value}");
+        } else if (data != null && data is Map<String, dynamic>) {
+          freeMiningData.value = data;
+          log("Fetched free mining data (map): ${freeMiningData.value}");
+        }
+      }
+    } catch (e) {
+      log("fetchFreeMiningData error: $e");
+    } finally {
+      isLoadingFreeMining.value = false;
+    }
   }
 
   // ─── GET /subscriptions/plans ────────────────────────────────────────────
@@ -65,6 +92,17 @@ class StoreController extends GetxController {
         log("Fetched ${plans.length} subscription plans");
       } else {
         log("Failed to fetch plans: ${response?['message']}");
+      }
+
+      if (plans.isEmpty) {
+        plans.value = [
+          SubscriptionPlan(id: "plan_1", name: "10 GH/s", displayName: "10 GH/s Miner", price: 0.0, miningSpeed: 10.0, aprPercent: 0.0, freeCpuPercent: 0.0, discountText: "0.0333 \$/Month"),
+          SubscriptionPlan(id: "plan_2", name: "20 GH/s", displayName: "20 GH/s Miner", price: 0.0, miningSpeed: 20.0, aprPercent: 0.0, freeCpuPercent: 0.0, discountText: "0.0667 \$/Month"),
+          SubscriptionPlan(id: "plan_3", name: "50 GH/s", displayName: "50 GH/s Miner", price: 0.0, miningSpeed: 50.0, aprPercent: 0.0, freeCpuPercent: 0.0, discountText: "0.1667 \$/Month"),
+          SubscriptionPlan(id: "plan_4", name: "100 GH/s", displayName: "100 GH/s Miner", price: 0.0, miningSpeed: 100.0, aprPercent: 0.0, freeCpuPercent: 0.0, discountText: "0.3333 \$/Month"),
+          SubscriptionPlan(id: "plan_5", name: "1 TH/s", displayName: "1 TH/s Miner", price: 0.0, miningSpeed: 1000.0, aprPercent: 0.0, freeCpuPercent: 0.0, discountText: "3.3333 \$/Month"),
+          SubscriptionPlan(id: "plan_6", name: "10 TH/s", displayName: "10 TH/s Miner", price: 0.0, miningSpeed: 10000.0, aprPercent: 0.0, freeCpuPercent: 0.0, discountText: "33.3333 \$/Month"),
+        ];
       }
     } catch (e) {
       log("fetchSubscriptionPlans error: $e");
@@ -141,12 +179,9 @@ class StoreController extends GetxController {
       final response = await StoreRepo.purchaseSubscription(body);
 
       if (response != null && response['success'] == true) {
-        Get.snackbar(
-          "Success 🎉",
+        AppSnackbar.success(
           response['message'] ?? "Plan purchased successfully!",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withValues(alpha: 0.9),
-          colorText: Colors.white,
+          title: "Success 🎉",
         );
         // Refresh current subscription & history after purchase
         await Future.wait([
@@ -155,23 +190,14 @@ class StoreController extends GetxController {
         ]);
         selectedPlanIndex.value = -1;
       } else {
-        Get.snackbar(
-          "Purchase Failed",
+        AppSnackbar.error(
           response?['message'] ?? "Something went wrong",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-          colorText: Colors.white,
+          title: "Purchase Failed",
         );
       }
     } catch (e) {
       log("purchasePlan error: $e");
-      Get.snackbar(
-        "Error",
-        "Something went wrong",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-        colorText: Colors.white,
-      );
+      AppSnackbar.error("Something went wrong");
     } finally {
       isPurchasing.value = false;
     }

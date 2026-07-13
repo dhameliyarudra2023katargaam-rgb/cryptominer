@@ -1,0 +1,283 @@
+[
+  {
+    "name": "email_signup_screen.dart",
+    "path": "lib\\Auth\\email_signup_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": false,
+    "lines": 435,
+    "comments": []
+  },
+  {
+    "name": "forgot_password_otp_screen.dart",
+    "path": "lib\\Auth\\forgot_password_otp_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": false,
+    "lines": 231,
+    "comments": []
+  },
+  {
+    "name": "login_screen.dart",
+    "path": "lib\\Auth\\login_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": true,
+    "lines": 187,
+    "comments": []
+  },
+  {
+    "name": "mpin_setup_screen.dart",
+    "path": "lib\\Auth\\mpin_setup_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": false,
+    "lines": 201,
+    "comments": []
+  },
+  {
+    "name": "mpin_unlock_screen.dart",
+    "path": "lib\\Auth\\mpin_unlock_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": false,
+    "lines": 200,
+    "comments": []
+  },
+  {
+    "name": "otp_verification_screen.dart",
+    "path": "lib\\Auth\\otp_verification_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": true,
+    "lines": 121,
+    "comments": []
+  },
+  {
+    "name": "profile_setup_screen.dart",
+    "path": "lib\\Auth\\profile_setup_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": true,
+    "lines": 302,
+    "comments": []
+  },
+  {
+    "name": "register_screen.dart",
+    "path": "lib\\Auth\\register_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": false,
+    "lines": 179,
+    "comments": []
+  },
+  {
+    "name": "reset_password_otp_screen.dart",
+    "path": "lib\\Auth\\reset_password_otp_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": false,
+    "lines": 195,
+    "comments": []
+  },
+  {
+    "name": "admin_mining_config_screen.dart",
+    "path": "lib\\Features\\AdminMining\\admin_mining_config_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": false,
+    "lines": 318,
+    "comments": []
+  },
+  {
+    "name": "home_screen.dart",
+    "path": "lib\\Features\\Home\\home_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": true,
+    "lines": 947,
+    "comments": []
+  },
+  {
+    "name": "maximize_profit_screen.dart",
+    "path": "lib\\Features\\Home\\maximize_profit_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": true,
+    "lines": 315,
+    "comments": []
+  },
+  {
+    "name": "notification_screen.dart",
+    "path": "lib\\Features\\Notification\\notification_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": true,
+    "lines": 254,
+    "comments": []
+  },
+  {
+    "name": "onboarding_screen.dart",
+    "path": "lib\\Features\\Onboarding\\onboarding_screen.dart",
+    "has_todo": false,
+    "has_dummy": true,
+    "has_controller": false,
+    "lines": 240,
+    "comments": []
+  },
+  {
+    "name": "faq_screen.dart",
+    "path": "lib\\Features\\Profile\\faq_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": false,
+    "lines": 177,
+    "comments": []
+  },
+  {
+    "name": "invite_friends_screen.dart",
+    "path": "lib\\Features\\Profile\\invite_friends_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": false,
+    "lines": 183,
+    "comments": []
+  },
+  {
+    "name": "mpin_screen.dart",
+    "path": "lib\\Features\\Profile\\mpin_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": true,
+    "lines": 262,
+    "comments": []
+  },
+  {
+    "name": "my_profile_screen.dart",
+    "path": "lib\\Features\\Profile\\my_profile_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": true,
+    "lines": 357,
+    "comments": []
+  },
+  {
+    "name": "password_screen.dart",
+    "path": "lib\\Features\\Profile\\password_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": true,
+    "lines": 583,
+    "comments": []
+  },
+  {
+    "name": "privacy_policy_screen.dart",
+    "path": "lib\\Features\\Profile\\privacy_policy_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": false,
+    "lines": 179,
+    "comments": []
+  },
+  {
+    "name": "profile_screen.dart",
+    "path": "lib\\Features\\Profile\\profile_screen.dart",
+    "has_todo": true,
+    "has_dummy": false,
+    "has_controller": true,
+    "lines": 432,
+    "comments": [
+      "// TODO: actual API logic"
+    ]
+  },
+  {
+    "name": "referral_members_screen.dart",
+    "path": "lib\\Features\\Profile\\referral_members_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": true,
+    "lines": 289,
+    "comments": []
+  },
+  {
+    "name": "refferal_screen.dart",
+    "path": "lib\\Features\\Profile\\refferal_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": false,
+    "lines": 592,
+    "comments": []
+  },
+  {
+    "name": "scanner_screen.dart",
+    "path": "lib\\Features\\Profile\\scanner_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": false,
+    "lines": 210,
+    "comments": []
+  },
+  {
+    "name": "create_miner_screen.dart",
+    "path": "lib\\Features\\Store\\create_miner_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": false,
+    "lines": 448,
+    "comments": []
+  },
+  {
+    "name": "my_miner_screen.dart",
+    "path": "lib\\Features\\Store\\my_miner_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": true,
+    "lines": 616,
+    "comments": []
+  },
+  {
+    "name": "plan_details_screen.dart",
+    "path": "lib\\Features\\Store\\plan_details_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": true,
+    "lines": 343,
+    "comments": []
+  },
+  {
+    "name": "store_screen_view.dart",
+    "path": "lib\\Features\\Store\\store_screen_view.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": false,
+    "lines": 383,
+    "comments": []
+  },
+  {
+    "name": "wallet_screen.dart",
+    "path": "lib\\Features\\Wallet\\wallet_screen.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": false,
+    "lines": 260,
+    "comments": []
+  },
+  {
+    "name": "withdrawal_screen.dart",
+    "path": "lib\\Features\\Wallet\\withdrawal_screen.dart",
+    "has_todo": false,
+    "has_dummy": true,
+    "has_controller": true,
+    "lines": 414,
+    "comments": []
+  },
+  {
+    "name": "withdrawal_status.dart",
+    "path": "lib\\Features\\Wallet\\withdrawal_status.dart",
+    "has_todo": false,
+    "has_dummy": false,
+    "has_controller": false,
+    "lines": 201,
+    "comments": []
+  }
+]

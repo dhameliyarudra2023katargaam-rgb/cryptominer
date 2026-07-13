@@ -3,16 +3,18 @@ import 'package:cryptominer/Features/Profile/refferal_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:share_plus/share_plus.dart';
 import 'mpin_screen.dart';
 import 'privacy_policy_screen.dart';
-
+import 'faq_screen.dart';
+import 'scanner_screen.dart';
 import '../../Utility/black_card.dart';
 import '../../Utility/common_color.dart';
 import '../../Utility/common_copy_clipboard.dart';
 import '../../Utility/common_next_arrow_icon.dart';
 import '../../Utility/common_text.dart';
 import '../../Utility/custom_appbar.dart';
-import '../../Utility/picture_path.dart';
+import '../../Utility/image_const.dart';
 import '../../Utility/common_dialog.dart';
 import '../../Auth/auth_controller.dart';
 import 'my_profile_screen.dart';
@@ -27,18 +29,31 @@ class ProfileScreenView extends StatefulWidget {
 class _ProfileScreenViewState extends State<ProfileScreenView> {
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          CustomAppBar(
+    return Column(
+      children: [
+        Padding(
+          // header space
+          // padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
+          padding: const EdgeInsets.only(top: 4, left: 20, right: 20),
+          child: CustomAppBar(
             title: "Profile",
             fontSize: 26,
             leading: const SizedBox(width: 48),
             actions: [
               IconButton(
-                onPressed: () {},
+                onPressed: () async {
+                  final scannedCode = await Get.to(() => const ScannerScreen());
+                  if (scannedCode != null) {
+                    // TODO: actual API logic
+                    debugPrint("Scanned QR: $scannedCode");
+                    CommonDialog.showConfirmation(
+                      title: "Scan Successful",
+                      message: "Scanned Code: $scannedCode\n\n(API logic pending)",
+                      confirmText: "OK",
+                      onConfirm: () {},
+                    );
+                  }
+                },
                 icon: const Icon(
                   Icons.qr_code_scanner,
                   color: Colors.white,
@@ -47,9 +62,18 @@ class _ProfileScreenViewState extends State<ProfileScreenView> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+        ),
 
-          GestureDetector(
+        // header space
+        // const SizedBox(height: 24),
+        const SizedBox(height: 6),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                GestureDetector(
             onTap: () => Get.to(
                   () => const MyProfileScreen(),
               transition: Transition.rightToLeft,
@@ -113,7 +137,7 @@ class _ProfileScreenViewState extends State<ProfileScreenView> {
                                   );
                                 },
                                 child: SvgPicture.asset(
-                                  PicturePath.copyIcon,
+                                  ImageConst.copyIcon,
                                   width: 14,
                                   height: 14,
                                   fit: BoxFit.contain,
@@ -147,7 +171,7 @@ class _ProfileScreenViewState extends State<ProfileScreenView> {
               child: Row(
                 children: [
                   SvgPicture.asset(
-                    PicturePath.profileUser,
+                    ImageConst.profileUser,
                     width: 24,
                     height: 24,
                     fit: BoxFit.contain,
@@ -193,7 +217,7 @@ class _ProfileScreenViewState extends State<ProfileScreenView> {
                       child: Row(
                         children: [
                           SvgPicture.asset(
-                            PicturePath.profileUser,
+                            ImageConst.passwordLockIcon,
                             width: 24,
                             height: 24,
                             fit: BoxFit.contain,
@@ -233,7 +257,7 @@ class _ProfileScreenViewState extends State<ProfileScreenView> {
                       child: Row(
                         children: [
                           SvgPicture.asset(
-                            PicturePath.profileUser,
+                            ImageConst.passwordLockIcon,
                             width: 24,
                             height: 24,
                             fit: BoxFit.contain,
@@ -267,7 +291,7 @@ class _ProfileScreenViewState extends State<ProfileScreenView> {
             child: Row(
               children: [
                 SvgPicture.asset(
-                  PicturePath.languageIcon,
+                  ImageConst.languageIcon,
                   width: 24,
                   height: 24,
                   fit: BoxFit.contain,
@@ -298,23 +322,49 @@ class _ProfileScreenViewState extends State<ProfileScreenView> {
             borderRadius: 16,
             child: Column(
               children: [
-                _buildBelowAllItem(PicturePath.faqIcon, "FAQs", isFirst: true, onTap: () {}),
+                _buildBelowAllItem(
+                  ImageConst.faqIcon,
+                  "FAQs",
+                  isFirst: true,
+                  onTap: () => Get.to(
+                    () => const FaqScreen(),
+                    transition: Transition.rightToLeft,
+                    duration: const Duration(milliseconds: 300),
+                  ),
+                ),
                 _buildBelowAllDivider(),
-                _buildBelowAllItem(PicturePath.supportIcon, "Support", onTap: () {}),
+                _buildBelowAllItem(ImageConst.supportIcon, "Support", onTap: () {}),
                 _buildBelowAllDivider(),
                 _buildBelowAllItem(
-                  PicturePath.privacyPolicyIcon,
+                  ImageConst.privacyPolicyIcon,
                   "Privacy Policy",
                   onTap: () => Get.to(() => const PrivacyPolicyScreen()),
                 ),
                 _buildBelowAllDivider(),
-                _buildBelowAllItem(PicturePath.shareAppIcon, "Share App", onTap: () {}),
+                _buildBelowAllItem(
+                  ImageConst.shareAppIcon,
+                  "Share App",
+                  onTap: () {
+                    Share.share('Check out CryptoMiner! Download it now to start your journey.');
+                  },
+                ),
                 _buildBelowAllDivider(),
                 _buildBelowAllItem(
-                  PicturePath.deleteAccountIcon,
+                  ImageConst.deleteAccountIcon,
                   "Delete Account",
                   isLast: true,
-                  onTap: () {},
+                  onTap: () {
+                    CommonDialog.showConfirmation(
+                      title: "Delete Account",
+                      message: "Are you sure you want to delete your account? This action cannot be undone.",
+                      confirmText: "Delete",
+                      confirmColor: CommonColor.red,
+                      onConfirm: () {
+                        final AuthController authController = Get.find<AuthController>();
+                        authController.deleteAccount();
+                      },
+                    );
+                  },
                 ),
               ],
             ),
@@ -341,6 +391,9 @@ class _ProfileScreenViewState extends State<ProfileScreenView> {
           ),
         ],
       ),
+      ),
+      ),
+      ],
     );
   }
 

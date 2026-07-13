@@ -30,7 +30,7 @@ class ApiConst {
   static const String withdrawalsHistoryApi = "/withdrawals/history"; // done
 
   /// Subscription & Premium APIs
-  static const String SubscriptionPlanApi = "/subscriptions/plans"; // done =
+  static const String SubscriptionPlanApi = "/subscriptions/plans"; // done
   static const String SubscriptionPlanPurchaseApi = "/subscriptions/purchase";
   static const String CurrentSubscriptionPlanApi =
       "/subscriptions/current"; // done =
@@ -55,7 +55,9 @@ class ApiConst {
   // static const String verifyMpinApi = "/auth/verify-mpin";
   // static const String changeMpinApi = "/auth/change-mpin";
 
+// static const String updateProfileApi = "/auth/update-profile";
   static const String updateProfileApi = "/user/profile";
+  static const String deleteAccountApi = "/user/profile";
 
   /// Notification APIs
   static const String notificationApi = "/notifications"; // done

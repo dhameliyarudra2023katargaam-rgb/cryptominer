@@ -4,15 +4,18 @@ import 'package:get/get.dart';
 import '../../Utility/black_card.dart';
 import '../../Utility/common_color.dart';
 import '../../Utility/common_copy_clipboard.dart';
+import '../../Utility/app_snackbar.dart';
 import '../../Utility/common_next_arrow_icon.dart';
 import '../../Utility/common_text.dart';
 import '../../Utility/custom_appbar.dart';
 import '../../Utility/font_style.dart';
-import '../../Utility/picture_path.dart';
+import '../../Utility/image_const.dart';
 import '../../Utility/yellow_card.dart';
 import 'invite_friends_screen.dart';
 import 'referral_controller.dart';
+import 'referral_members_screen.dart';
 import 'referral_model.dart';
+import '../../Service/Ads/native_ads_service.dart';
 
 class ReferralScreenView extends StatelessWidget {
   const ReferralScreenView({super.key});
@@ -34,7 +37,7 @@ class ReferralScreenView extends StatelessWidget {
               child: Opacity(
                 opacity: 0.9,
                 child: Image.asset(
-                  PicturePath.goldenShadowImage,
+                  ImageConst.goldenShadowImage,
                   fit: BoxFit.fitWidth,
                 ),
               ),
@@ -42,11 +45,12 @@ class ReferralScreenView extends StatelessWidget {
 
             Positioned.fill(
               child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    // header space
                     const SizedBox(height: 16),
 
                     // ── AppBar ──────────────────────────────────────────────
@@ -54,16 +58,23 @@ class ReferralScreenView extends StatelessWidget {
                       title: "Referral Program",
                       fontSize: 22,
                       actions: [
-                        SvgPicture.asset(
-                          PicturePath.profileUser,
-                          width: 24,
-                          height: 24,
-                          fit: BoxFit.contain,
+                        GestureDetector(
+                          onTap: () => Get.to(
+                            () => const ReferralMembersScreen(),
+                            transition: Transition.rightToLeft,
+                            duration: const Duration(milliseconds: 300),
+                          ),
+                          child: SvgPicture.asset(
+                            ImageConst.profileUser,
+                            width: 24,
+                            height: 24,
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 36),
+                    const SizedBox(height: 12),
 
                     const Text(
                       "Invite to your friends and\nget a extra coins.",
@@ -127,7 +138,7 @@ class ReferralScreenView extends StatelessWidget {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     SvgPicture.asset(
-                                      PicturePath.copyIcon,
+                                      ImageConst.copyIcon,
                                       width: 18,
                                       height: 18,
                                       fit: BoxFit.contain,
@@ -143,7 +154,7 @@ class ReferralScreenView extends StatelessWidget {
                       );
                     }),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 26),
 
                     // ── Total Rewards Card (from /referrals/info) ───────────
                     Obx(() {
@@ -230,66 +241,72 @@ class ReferralScreenView extends StatelessWidget {
 
                     const SizedBox(height: 24),
 
-                    // ── Members Section Title ───────────────────────────────
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: SizedBox(
-                        width: 370,
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 4.0),
-                          child: Text(
-                            "Members",
-                            style: CommonFontStyles.heading1,
-                          ),
-                        ),
-                      ),
-                    ),
+                    // const _ReferralAdBanner(),
 
-                    const SizedBox(height: 12),
-
-                    // ── Referred Users List (from /referrals/users) ─────────
-                    Obx(() {
-                      if (controller.isLoadingUsers.value) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 24),
-                          child: Center(
-                            child: CircularProgressIndicator(
-                                color: CommonColor.orange),
-                          ),
-                        );
-                      }
-
-                      final users = controller.referredUsers;
-
-                      if (users.isEmpty) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 24),
-                          child: Center(
-                            child: CommonText.body(
-                              "No referred members yet",
-                              style: const TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                        );
-                      }
-
-                      return SizedBox(
-                        width: 370,
-                        child: Column(
-                          children: users
-                              .map((user) => _buildMemberList(
-                                    name: user.name,
-                                    statusText: user.isMiningActive
-                                        ? "Active Min"
-                                        : "Inactive",
-                                    durationText: user.miningDuration,
-                                    isActive: user.isMiningActive,
-                                  ))
-                              .toList(),
-                        ),
-                      );
-                    }),
-
+                    // const SizedBox(height: 24),
+                    //
+                    // // ── Members Section Title ───────────────────────────────
+                    // const Align(
+                    //   alignment: Alignment.centerLeft,
+                    //   child: SizedBox(
+                    //     width: 370,
+                    //     child: Padding(
+                    //       padding: EdgeInsets.symmetric(horizontal: 4.0),
+                    //       child: Text(
+                    //         "Members",
+                    //         style: CommonFontStyles.heading1,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
+                    //
+                    // const SizedBox(height: 12),
+                    //
+                    // // ── Referred Users List (from /referrals/users) ─────────
+                    // Obx(() {
+                    //   if (controller.isLoadingUsers.value) {
+                    //     return const Padding(
+                    //       padding: EdgeInsets.symmetric(vertical: 24),
+                    //       child: Center(
+                    //         child: CircularProgressIndicator(
+                    //             color: CommonColor.orange),
+                    //       ),
+                    //     );
+                    //   }
+                    //
+                    //   final users = controller.referredUsers;
+                    //
+                    //   if (users.isEmpty) {
+                    //     return Padding(
+                    //       padding: const EdgeInsets.symmetric(vertical: 24),
+                    //       child: Center(
+                    //         child: CommonText.body(
+                    //           "No referred members yet",
+                    //           style: const TextStyle(color: Colors.grey),
+                    //         ),
+                    //       ),
+                    //     );
+                    //   }
+                    //
+                    //   return SizedBox(
+                    //     width: 370,
+                    //     child: Column(
+                    //       children: users
+                    //           .map((user) => _buildMemberList(
+                    //                 name: user.name,
+                    //                 statusText: user.isMiningActive
+                    //                     ? "Active Min"
+                    //                     : "Inactive",
+                    //                 durationText: user.miningDuration,
+                    //                 isActive: user.isMiningActive,
+                    //               ))
+                    //           .toList(),
+                    //     ),
+                    //   );
+                    // }),
+                    //
+                    const SizedBox(height: 2),
+                    const Center(child: AppNativeAd()),
                     const SizedBox(height: 24),
 
                     // ── Rewards Breakdown Section ───────────────────────────
@@ -376,7 +393,7 @@ class ReferralScreenView extends StatelessWidget {
             ),
             padding: const EdgeInsets.all(8),
             child: SvgPicture.asset(
-              PicturePath.profileUser,
+              ImageConst.profileUser,
               colorFilter: ColorFilter.mode(
                 isActive ? CommonColor.green : CommonColor.red,
                 BlendMode.srcIn,
@@ -457,6 +474,123 @@ class ReferralScreenView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ReferralAdBanner extends StatelessWidget {
+  const _ReferralAdBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 371,
+      height: 108,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: CommonColor.greyCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 1.0,
+        ),
+      ),
+      // child: Row(
+      //   crossAxisAlignment: CrossAxisAlignment.center,
+      //   children: [
+      //     // ClipRRect(
+      //     //   borderRadius: BorderRadius.circular(12),
+      //     //   child: SizedBox(
+      //     //     width: 90,
+      //     //     height: 90,
+      //     //     child: Image.asset(
+      //     //       ImageConst.bitcoinImage,
+      //     //       fit: BoxFit.cover,
+      //     //     ),
+      //     //   ),
+      //     // ),
+      //     // const SizedBox(width: 10),
+      //     // Expanded(
+      //     //   child: Column(
+      //     //     crossAxisAlignment: CrossAxisAlignment.start,
+      //     //     mainAxisAlignment: MainAxisAlignment.center,
+      //     //     children: [
+      //     //       const Text(
+      //     //         "BTC Mining Cloud Bitcoin Min...",
+      //     //         style: TextStyle(
+      //     //           fontWeight: FontWeight.normal,
+      //     //           color: Colors.white,
+      //     //           fontSize: 12,
+      //     //         ),
+      //     //         maxLines: 1,
+      //     //         overflow: TextOverflow.ellipsis,
+      //     //       ),
+      //     //       const SizedBox(height: 2),
+      //     //       Row(
+      //     //         children: [
+      //     //           Container(
+      //     //             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+      //     //             decoration: BoxDecoration(
+      //     //               border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+      //     //               borderRadius: BorderRadius.circular(3),
+      //     //             ),
+      //     //             child: Text(
+      //     //               "AD",
+      //     //               style: TextStyle(
+      //     //                 color: Colors.white.withValues(alpha: 0.6),
+      //     //                 fontSize: 7,
+      //     //                 fontWeight: FontWeight.normal,
+      //     //               ),
+      //     //             ),
+      //     //           ),
+      //     //           const SizedBox(width: 6),
+      //     //           Row(
+      //     //             children: List.generate(5, (index) => const Icon(
+      //     //               Icons.star,
+      //     //               color: Color(0xFFF49518),
+      //     //               size: 10,
+      //     //             )),
+      //     //           ),
+      //     //         ],
+      //     //       ),
+      //     //       const SizedBox(height: 2),
+      //     //       Text(
+      //     //         "Now you can! Dive into the world of cryptocur...",
+      //     //         style: TextStyle(
+      //     //           color: Colors.white.withValues(alpha: 0.6),
+      //     //           fontSize: 9,
+      //     //         ),
+      //     //         maxLines: 1,
+      //     //         overflow: TextOverflow.ellipsis,
+      //     //       ),
+      //     //       const SizedBox(height: 6),
+      //     //       GestureDetector(
+      //     //         onTap: () {
+      //     //           AppSnackbar.success("Installation started!");
+      //     //         },
+      //     //         child: Container(
+      //     //           width: double.infinity,
+      //     //           height: 26,
+      //     //           decoration: BoxDecoration(
+      //     //             color: CommonColor.blue,
+      //     //             borderRadius: BorderRadius.circular(13),
+      //     //           ),
+      //     //           alignment: Alignment.center,
+      //     //           child: const Text(
+      //     //             "Install",
+      //     //             style: TextStyle(
+      //     //               color: Colors.white,
+      //     //               fontWeight: FontWeight.normal,
+      //     //               fontSize: 11,
+      //     //             ),
+      //     //           ),
+      //     //         ),
+      //     //       ),
+      //     //     ],
+      //     //   ),
+      //     // ),
+      //   ],
+      // ),
     );
   }
 }
