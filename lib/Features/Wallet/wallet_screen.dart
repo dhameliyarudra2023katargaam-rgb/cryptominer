@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:cryptominer/Features/Wallet/total_balance.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -5,7 +6,7 @@ import 'package:get/get.dart';
 import '../../Service/Ads/native_ads_service.dart';
 import 'wallet_controller.dart';
 
-import '../../Utility/app_custom_dialog.dart';
+
 import '../../Utility/black_card.dart';
 import '../../Utility/blue_button.dart';
 import '../../Utility/common_color.dart';
@@ -27,13 +28,10 @@ class _WalletScreenState extends State<WalletScreen> {
   void initState() {
     super.initState();
     walletController = Get.put(WalletController());
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      AppCustomDialog.show(
-        context: context,
-        title: "Virtual Balance Notice",
-        message: "This app uses virtual currency only. No real cryptocurrency, cash rewards, withdrawals, or investment returns are provided.",
-      );
-    });
+    
+    // Log the total balance when entering the screen
+    final total = walletController.walletBalance['totalBalance'] ?? "0.00";
+    log("Entered WalletScreen - Current Total Balance: $total");
   }
 
   @override
@@ -100,7 +98,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const CommonText.small(
-                          "Bonus Miner Rewards",
+                          "Total Mining Rewards",
                           style: TextStyle(
                             color: Colors.grey,
                             fontSize: 13,
@@ -128,7 +126,8 @@ class _WalletScreenState extends State<WalletScreen> {
                     text: "Claim",
                     width: 80,
                     height: 36,
-                    onPressed: () {},
+                   // total balance & reward ads
+                    onPressed: () => walletController.claimBonusReward(),
                   ),
                 ],
               ),
@@ -168,7 +167,8 @@ class _WalletScreenState extends State<WalletScreen> {
             return Column(
                children: List.generate(txs.length, (index) {
                 final tx = txs[index];
-                final title = tx['type']?.toString() ?? "Mining reward";
+                final rawTitle = tx['type']?.toString() ?? "Mining reward";
+                final title = rawTitle.toUpperCase() == 'BONUS' ? 'CLAIM' : rawTitle;
                 final status = tx['status']?.toString() ?? "Pending";
                 final rawAmount = tx['amount']?.toString() ?? "0.00000000";
                 final double parsedAmount = double.tryParse(rawAmount) ?? 0.0;

@@ -8,6 +8,7 @@ import '../Utility/app_snackbar.dart';
 import '../Utility/common_dialog.dart';
 import 'auth_model.dart';
 import 'login_screen.dart';
+import 'auth_controller.dart';
 
 class MpinController extends GetxController {
   static bool isSessionUnlocked = false;
@@ -135,17 +136,55 @@ class MpinController extends GetxController {
         if (responseModel.data?.token != null) {
           await SharedPrefHelper.setString("token", responseModel.data!.token!);
         }
+        if (responseModel.data?.refreshToken != null) {
+          await SharedPrefHelper.setString("refreshToken", responseModel.data!.refreshToken!);
+        }
+        if (responseModel.data?.user?.sId != null) {
+          await SharedPrefHelper.setString("userId", responseModel.data!.user!.sId!);
+        }
+        if (responseModel.data?.user?.name != null) {
+          await SharedPrefHelper.setString("name", responseModel.data!.user!.name!);
+        }
+        if (responseModel.data?.user?.role != null) {
+          await SharedPrefHelper.setString("role", responseModel.data!.user!.role!);
+        }
+        if (responseModel.data?.user?.userId != null) {
+          await SharedPrefHelper.setString("displayUserId", responseModel.data!.user!.userId!);
+        }
+
+        // Also update AuthController values if registered
+        if (Get.isRegistered<AuthController>()) {
+          final authController = Get.find<AuthController>();
+          if (responseModel.data?.user?.name != null) {
+            authController.userName.value = responseModel.data!.user!.name!;
+          }
+          if (responseModel.data?.user?.role != null) {
+            authController.userRole.value = responseModel.data!.user!.role!;
+          }
+          if (responseModel.data?.user?.userId != null) {
+            authController.displayUserId.value = responseModel.data!.user!.userId!;
+          }
+        }
+
         AppSnackbar.success(responseModel.message ?? "Welcome back!", title: "Unlocked");
         await SharedPrefHelper.setBool("hasMpin", true);
         isSessionUnlocked = true;
         return true;
       } else {
-        AppSnackbar.error(responseModel.message ?? "Invalid MPIN", title: "Unlock Failed");
+        CommonDialog.show(
+          title: "Wrong PIN",
+          message: responseModel.message ?? "The PIN you entered is incorrect. Please try again.",
+          isError: true,
+        );
         return false;
       }
     } catch (e) {
       log("Error verifying MPIN: $e");
-      AppSnackbar.error("Something went wrong while unlocking");
+      CommonDialog.show(
+        title: "Error",
+        message: "Something went wrong while unlocking. Please try again.",
+        isError: true,
+      );
       return false;
     } finally {
       isLoading.value = false;

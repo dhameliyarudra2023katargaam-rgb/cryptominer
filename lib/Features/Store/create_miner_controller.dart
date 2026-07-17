@@ -104,87 +104,116 @@ class CreateMinerController extends GetxController {
       isLoadingPlans.value = true;
       final response = await CreateMinerRepo.getSubscriptionPlans();
 
+      List<dynamic> list = [];
       if (response != null && response['success'] == true) {
         final rawData = response['data'];
-        List<dynamic> list = [];
-
         if (rawData is List) {
           list = rawData;
         } else if (rawData is Map && rawData['plans'] is List) {
           list = rawData['plans'] as List;
         }
+      }
 
+      if (list.isNotEmpty) {
         plans.value = list
             .map((e) => CreateMinerPlan.fromJson(e as Map<String, dynamic>))
             .toList();
+      } else {
+        // Fallback plans matching store_screen_view.dart data
+        plans.value = [
+          // 10 GH/s
+          CreateMinerPlan(id: "plan_1_1", displayName: "10 GH/s Miner", price: 0.0, durationMonths: 1, miningSpeedThs: 10.0, estimateProfitPercent: 30.0),
+          CreateMinerPlan(id: "plan_1_3", displayName: "10 GH/s Miner", price: 0.0, durationMonths: 3, miningSpeedThs: 10.0, estimateProfitPercent: 30.1, isPopular: true),
+          CreateMinerPlan(id: "plan_1_6", displayName: "10 GH/s Miner", price: 0.0, durationMonths: 6, miningSpeedThs: 10.0, estimateProfitPercent: 30.2),
 
-        // Populate dynamic CPU options based on unique speeds from plans
-        final Set<double> uniqueSpeeds = plans.map((p) => p.miningSpeedThs).toSet();
-        final List<double> sortedSpeeds = uniqueSpeeds.toList()..sort();
-        
-        cpuOptions.value = sortedSpeeds.map((s) {
-          return CpuSpeedOption(
-            label: '${s.toStringAsFixed(0)} Th/s',
-            speedThs: s,
-          );
-        }).toList();
+          // 20 GH/s
+          CreateMinerPlan(id: "plan_2_1", displayName: "20 GH/s Miner", price: 0.0, durationMonths: 1, miningSpeedThs: 20.0, estimateProfitPercent: 30.0),
+          CreateMinerPlan(id: "plan_2_3", displayName: "20 GH/s Miner", price: 0.0, durationMonths: 3, miningSpeedThs: 20.0, estimateProfitPercent: 30.1, isPopular: true),
+          CreateMinerPlan(id: "plan_2_6", displayName: "20 GH/s Miner", price: 0.0, durationMonths: 6, miningSpeedThs: 20.0, estimateProfitPercent: 30.2),
 
-        final dynamic args = Get.arguments;
-        double? initialSpeed;
-        String? initialPlanId;
+          // 50 GH/s
+          CreateMinerPlan(id: "plan_3_1", displayName: "50 GH/s Miner", price: 0.0, durationMonths: 1, miningSpeedThs: 50.0, estimateProfitPercent: 30.0),
+          CreateMinerPlan(id: "plan_3_3", displayName: "50 GH/s Miner", price: 0.0, durationMonths: 3, miningSpeedThs: 50.0, estimateProfitPercent: 30.1, isPopular: true),
+          CreateMinerPlan(id: "plan_3_6", displayName: "50 GH/s Miner", price: 0.0, durationMonths: 6, miningSpeedThs: 50.0, estimateProfitPercent: 30.2),
 
-        if (args is Map) {
-          initialSpeed = args['speed'] as double?;
-          initialPlanId = args['id'] as String?;
-        } else if (args is double) {
-          initialSpeed = args;
-        } else if (args is int) {
-          initialSpeed = args.toDouble();
-        }
+          // 100 GH/s
+          CreateMinerPlan(id: "plan_4_1", displayName: "100 GH/s Miner", price: 0.0, durationMonths: 1, miningSpeedThs: 100.0, estimateProfitPercent: 30.0),
+          CreateMinerPlan(id: "plan_4_3", displayName: "100 GH/s Miner", price: 0.0, durationMonths: 3, miningSpeedThs: 100.0, estimateProfitPercent: 30.1, isPopular: true),
+          CreateMinerPlan(id: "plan_4_6", displayName: "100 GH/s Miner", price: 0.0, durationMonths: 6, miningSpeedThs: 100.0, estimateProfitPercent: 30.2),
 
-        selectedCpuIndex.value = 0;
-        if (initialSpeed != null) {
-          final cpuIdx = cpuOptions.indexWhere((c) => c.speedThs == initialSpeed);
-          if (cpuIdx != -1) {
-            selectedCpuIndex.value = cpuIdx;
-            
-            // Try to match specific plan ID to select the exact duration
-            if (initialPlanId != null) {
-              // Wait for CPU to be selected, then select plan
-              // But we can just set it now since `filteredPlans` will reflect the new CPU
-              final currentFiltered = plans.where((p) => p.miningSpeedThs == initialSpeed).toList();
-              final matchIdx = currentFiltered.indexWhere((p) => p.id == initialPlanId);
-              if (matchIdx != -1) {
-                selectedPlanIndex.value = matchIdx;
-              } else {
-                _selectPopularPlanForCpu(cpuIdx, plans);
-              }
+          // 1000 GH/s (1 TH/s)
+          CreateMinerPlan(id: "plan_5_1", displayName: "1000 GH/s Miner", price: 0.0, durationMonths: 1, miningSpeedThs: 1000.0, estimateProfitPercent: 30.0),
+          CreateMinerPlan(id: "plan_5_3", displayName: "1000 GH/s Miner", price: 0.0, durationMonths: 3, miningSpeedThs: 1000.0, estimateProfitPercent: 30.1, isPopular: true),
+          CreateMinerPlan(id: "plan_5_6", displayName: "1000 GH/s Miner", price: 0.0, durationMonths: 6, miningSpeedThs: 1000.0, estimateProfitPercent: 30.2),
+
+          // 10000 GH/s (10 TH/s)
+          CreateMinerPlan(id: "plan_6_1", displayName: "10000 GH/s Miner", price: 0.0, durationMonths: 1, miningSpeedThs: 10000.0, estimateProfitPercent: 30.0),
+          CreateMinerPlan(id: "plan_6_3", displayName: "10000 GH/s Miner", price: 0.0, durationMonths: 3, miningSpeedThs: 10000.0, estimateProfitPercent: 30.1, isPopular: true),
+          CreateMinerPlan(id: "plan_6_6", displayName: "10000 GH/s Miner", price: 0.0, durationMonths: 6, miningSpeedThs: 10000.0, estimateProfitPercent: 30.2),
+        ];
+      }
+
+      // Populate dynamic CPU options based on unique speeds from plans
+      final Set<double> uniqueSpeeds = plans.map((p) => p.miningSpeedThs).toSet();
+      final List<double> sortedSpeeds = uniqueSpeeds.toList()..sort();
+      
+      cpuOptions.value = sortedSpeeds.map((s) {
+        final label = s >= 1000 
+            ? '${(s / 1000).toStringAsFixed(0)} TH/s' 
+            : '${s.toStringAsFixed(0)} GH/s';
+        return CpuSpeedOption(
+          label: label,
+          speedThs: s,
+        );
+      }).toList();
+
+      final dynamic args = Get.arguments;
+      double? initialSpeed;
+      String? initialPlanId;
+
+      if (args is Map) {
+        initialSpeed = args['speed'] as double?;
+        initialPlanId = args['id'] as String?;
+      } else if (args is double) {
+        initialSpeed = args;
+      } else if (args is int) {
+        initialSpeed = args.toDouble();
+      }
+
+      selectedCpuIndex.value = 0;
+      if (initialSpeed != null) {
+        final cpuIdx = cpuOptions.indexWhere((c) => c.speedThs == initialSpeed);
+        if (cpuIdx != -1) {
+          selectedCpuIndex.value = cpuIdx;
+          
+          // Try to match specific plan ID to select the exact duration
+          if (initialPlanId != null) {
+            final currentFiltered = plans.where((p) => p.miningSpeedThs == initialSpeed).toList();
+            final matchIdx = currentFiltered.indexWhere((p) => p.id == initialPlanId);
+            if (matchIdx != -1) {
+              selectedPlanIndex.value = matchIdx;
             } else {
               _selectPopularPlanForCpu(cpuIdx, plans);
             }
           } else {
-             _selectPopularOverall(plans);
+            _selectPopularPlanForCpu(cpuIdx, plans);
           }
         } else {
-          // Default to the first CPU option (10 Th/s) and its popular plan
-          selectedCpuIndex.value = 0;
-          if (cpuOptions.isNotEmpty) {
-            _selectPopularPlanForCpu(0, plans);
-          }
+           _selectPopularOverall(plans);
         }
-        
-        // Ensure plan is selected properly if not overridden by ID match
-        if (cpuOptions.isNotEmpty && initialPlanId == null) {
-          selectCpu(selectedCpuIndex.value);
-        }
-        log("CreateMinerController: Fetched ${plans.length} plans");
       } else {
-        log("CreateMinerController: fetchPlans failed → ${response?['message']}");
-        _showError("Could not load plans. Please try again.");
+        selectedCpuIndex.value = 0;
+        if (cpuOptions.isNotEmpty) {
+          _selectPopularPlanForCpu(0, plans);
+        }
       }
+      
+      if (cpuOptions.isNotEmpty && initialPlanId == null) {
+        selectCpu(selectedCpuIndex.value);
+      }
+      log("CreateMinerController: Loaded ${plans.length} plans");
     } catch (e) {
       log("CreateMinerController: fetchPlans error → $e");
-      _showError("Something went wrong. Please try again.");
     } finally {
       isLoadingPlans.value = false;
     }

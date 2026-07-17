@@ -8,6 +8,7 @@ import 'Auth/login_screen.dart';
 import 'Auth/auth_binding.dart';
 import 'Service/storage_service.dart';
 import 'Service/notification_service.dart';
+import 'Service/background_notification_handler.dart';
 
 import 'Auth/mpin_unlock_screen.dart';
 import 'Features/Home/home_screen.dart';
@@ -162,3 +163,19 @@ class MyApp extends StatelessWidget {
 // body: {"adCompleted": adCompleted}, ==> comment of mining start button error
 
 /// home screen after open MPIN screen /// screen navigation issue comment
+
+// r
+
+// log
+// Saved new Google user to Firestore.
+// Updated existing Google user in Firestore
+// Error writing Google user details to Firestore
+
+// comment \\
+// Mining account issue
+// mining digits issue
+// mining speed issue
+// Entered WalletScreen - Current Total Balance
+// Claim Wallet Response
+
+/// HOUR MIN SESSION

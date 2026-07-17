@@ -13,6 +13,7 @@ import '../../Utility/common_dialog.dart';
 import '../../Utility/app_snackbar.dart';
 import '../../Auth/auth_controller.dart';
 import '../../Service/storage_service.dart';
+import '../../Service/Ads/native_ads_service.dart';
 
 class MyProfileScreen extends StatefulWidget {
   const MyProfileScreen({super.key});
@@ -148,9 +149,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 36),
-
-                    // Large ad banner at bottom
-                    const _ProfileAdBanner(),
+                    const Center(child: AppNativeAd()),
                   ],
                 ),
               ),
@@ -215,145 +214,4 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   }
 }
 
-class _ProfileAdBanner extends StatelessWidget {
-  const _ProfileAdBanner();
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 371,
-      height: 258,
-      decoration: BoxDecoration(
-        color: CommonColor.greyCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
-          width: 1.0,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top half: Big image
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-            child: SizedBox(
-              width: double.infinity,
-              height: 135,
-              child: Image.asset(
-                ImageConst.halfBitcoinImage,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          // Bottom half: Details & Install button
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: SizedBox(
-                          width: 44,
-                          height: 44,
-                          child: Image.asset(
-                            ImageConst.bitcoinImage,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "BTC Mining Cloud Bitcoin Miner",
-                              style: TextStyle(
-                                fontWeight: FontWeight.normal,
-                                color: Colors.white,
-                                fontSize: 12,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 2),
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                  child: Text(
-                                    "AD",
-                                    style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.6),
-                                      fontSize: 7,
-                                      fontWeight: FontWeight.normal,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Row(
-                                  children: List.generate(5, (index) => const Icon(
-                                    Icons.star,
-                                    color: Color(0xFFF49518),
-                                    size: 10,
-                                  )),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              "Now you can! Dive into the world of cryptocurrency with our easy-to-use BTC cloud mining platform.",
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.6),
-                                fontSize: 9,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      AppSnackbar.success("Installation started!");
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: CommonColor.blue,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        "Install",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.normal,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

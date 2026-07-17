@@ -25,22 +25,14 @@ class HomeController extends GetxController {
   final RxMap<String, dynamic> miningConfig = <String, dynamic>{}.obs;
 
   double get effectiveMiningSpeed {
-    // 1. Base Free Speed (User explicitly requested 10 GH/s always active)
-    double freeSpeed = 10.0;
+    // 1. Base Free Speed (10 GH/s always active by default)
+    double baseSpeed = 10.0;
     
-    // We can also add API speed if it provides something extra, but keeping 10.0 as base.
-    double apiSpeed = double.tryParse(dashboardMiningSpeed.value) ?? 0.0;
-    
-    // Use the max of 10.0 or the API speed so it never goes below 10 GH/s
-    double baseSpeed = apiSpeed > freeSpeed ? apiSpeed : freeSpeed;
-
-    
-    // 2. Paid Speed
-    double paidSpeed = 0.0;
+    // 2. Paid Plan Speed (Overrides the base free speed if active)
     if (Get.isRegistered<StoreController>()) {
       final storeCtrl = Get.find<StoreController>();
       if (storeCtrl.hasActivePlan) {
-        paidSpeed = storeCtrl.currentSubscription.value?.miningSpeed ?? 0.0;
+        baseSpeed = storeCtrl.currentSubscription.value?.miningSpeed ?? 10.0;
       }
     }
 
@@ -50,13 +42,11 @@ class HomeController extends GetxController {
       boostSpeed = double.tryParse(miningConfig['adSpeedBonus']?.toString() ?? "100") ?? 100.0;
     }
 
-    return baseSpeed + paidSpeed + boostSpeed;
+    return baseSpeed + boostSpeed;
   }
 
   double get effectiveFreeMiningSpeed {
-    double freeSpeed = 10.0;
-    double apiSpeed = double.tryParse(dashboardMiningSpeed.value) ?? 0.0;
-    double baseSpeed = apiSpeed > freeSpeed ? apiSpeed : freeSpeed;
+    double baseSpeed = 10.0;
     
     double boostSpeed = 0.0;
     if (isBoosting.value) {

@@ -13,6 +13,8 @@ import '../Features/Home/home_controller.dart';
 import '../Features/AdminMining/admin_mining_config_controller.dart';
 import '../Utility/app_snackbar.dart';
 import '../Utility/mining_calc_helper.dart';
+// Mining account issue
+import '../Features/Wallet/wallet_controller.dart';
 
 class SocketService extends GetxService with WidgetsBindingObserver {
   io.Socket? _socket;
@@ -24,8 +26,9 @@ class SocketService extends GetxService with WidgetsBindingObserver {
   }
 
   // Observables for real-time mining state
-  final RxString currentMiningBalance = "0.5555555555".obs;
-  final RxString currentEarned = "0.000000000000000000".obs;
+  // Mining account issue
+  final RxString currentMiningBalance = "0.000000000000000".obs;
+  final RxString currentEarned = "0.000000000000000".obs;
   final RxString currentSpeed = "0.0".obs;
   final RxInt remainingTime = 0.obs;
   final RxString status = "IDLE".obs;
@@ -44,6 +47,33 @@ class SocketService extends GetxService with WidgetsBindingObserver {
     }
   }
 
+  void _disconnectSocketRaw() {
+    if (_socket != null) {
+      _socket!.disconnect();
+      _socket!.dispose();
+      _socket = null;
+      isConnected.value = false;
+      dev.log("🔌 SocketService: Raw socket disconnected.");
+    }
+  }
+
+  DateTime? _parseServerDateTime(dynamic value) {
+    if (value == null) return null;
+    String dateStr = value.toString().trim();
+    if (dateStr.isEmpty) return null;
+    
+    // If there's no Z and no +/- offset, append 'Z' to treat as UTC
+    if (!dateStr.endsWith('Z') && 
+        !dateStr.contains(RegExp(r'[+-]\d{2}:?\d{2}$')) && 
+        !dateStr.contains(RegExp(r'[+-]\d{4}$'))) {
+      if (dateStr.contains(' ') && !dateStr.contains('T')) {
+        dateStr = dateStr.replaceFirst(' ', 'T');
+      }
+      dateStr = '${dateStr}Z';
+    }
+    return DateTime.tryParse(dateStr);
+  }
+
   /// Connect to the Socket.IO server
   void connectSocket() {
     if (_socket != null && _socket!.connected) {
@@ -51,8 +81,8 @@ class SocketService extends GetxService with WidgetsBindingObserver {
       return;
     }
 
-    // Disconnect any existing socket first
-    disconnectSocket();
+    // Disconnect any existing socket first without resetting status and timer
+    _disconnectSocketRaw();
 
     final String? token = SharedPrefHelper.getString("token");
     dev.log("Token ::::::::::::::::::::::::: ${token.toString()}");
@@ -126,6 +156,28 @@ class SocketService extends GetxService with WidgetsBindingObserver {
         final serverMiningBalance = data['currentMiningBalance'] ?? data['miningBalance'];
         final serverEarned = data['currentEarned'] ?? data['earned'];
 
+        // mining digits issue
+        // double baseBal = 0.0;
+        // if (serverMiningBalance != null) {
+        //   baseBal = double.tryParse(serverMiningBalance.toString()) ?? 0.0;
+        // }
+        // double earnedBal = 0.0;
+        // if (serverEarned != null) {
+        //   earnedBal = double.tryParse(serverEarned.toString()) ?? 0.0;
+        // }
+        // double totalBal = baseBal + earnedBal;
+        // currentMiningBalance.value = totalBal.toStringAsFixed(18);
+        // if (serverEarned != null) {
+        //   if (serverEarned is num) {
+        //     currentEarned.value = serverEarned.toStringAsFixed(18);
+        //   } else {
+        //     final parsedVal = double.tryParse(serverEarned.toString()) ?? 0.0;
+        //     currentEarned.value = parsedVal.toStringAsFixed(18);
+        //   }
+        //   dev.log("🟢 [SOCKET SYNC] Live Count updated to: ${currentEarned.value}");
+        // }
+
+        // mining digits issue
         double baseBal = 0.0;
         if (serverMiningBalance != null) {
           baseBal = double.tryParse(serverMiningBalance.toString()) ?? 0.0;
@@ -136,15 +188,15 @@ class SocketService extends GetxService with WidgetsBindingObserver {
           earnedBal = double.tryParse(serverEarned.toString()) ?? 0.0;
         }
 
+        // Scale balances by 10.0 to match the client's 10x display speed
+        baseBal *= 10.0;
+        earnedBal *= 10.0;
+
         double totalBal = baseBal + earnedBal;
-        currentMiningBalance.value = totalBal.toStringAsFixed(18);
+        currentMiningBalance.value = totalBal.toStringAsFixed(15);
 
         if (serverEarned != null) {
-          if (serverEarned is num) {
-            currentEarned.value = serverEarned.toStringAsFixed(18);
-          } else {
-            currentEarned.value = serverEarned.toString();
-          }
+          currentEarned.value = earnedBal.toStringAsFixed(15);
           dev.log("🟢 [SOCKET SYNC] Live Count updated to: ${currentEarned.value}");
         }
 
@@ -241,11 +293,38 @@ class SocketService extends GetxService with WidgetsBindingObserver {
       dev.log("🔌 SocketService: Socket disconnected and cleaned up.");
     }
     _localMiningTimer?.cancel();
+    // Mining account issue
+    resetMiningState();
+  }
+
+  // Mining account issue
+  void resetMiningState() {
+    currentMiningBalance.value = "0.000000000000000";
+    currentEarned.value = "0.000000000000000";
+    currentSpeed.value = "0.0";
+    remainingTime.value = 0;
+    status.value = "IDLE";
+    totalSessionDuration.value = 86400;
+    logs.clear();
+    _localMiningTimer?.cancel();
   }
 
   Timer? _localMiningTimer;
 
+  // mining digits issue: Get background-safe mining speed in GH/s
+  double get currentMiningSpeed {
+    if (Get.isRegistered<HomeController>()) {
+      return Get.find<HomeController>().effectiveMiningSpeed;
+    }
+    double speed = double.tryParse(currentSpeed.value) ?? 0.0;
+    if (speed > 0.0 && speed < 10.0) {
+      return speed * 10.0; // Scale 1:10 server-to-client speed representations
+    }
+    return speed > 0.0 ? speed : 10.0; // Default to basic free speed of 10.0 GH/s
+  }
+
   void startLocalMiningTimer(int durationSeconds, {bool resetBalance = false}) {
+    print("startLocalMiningTimer: durationSeconds = $durationSeconds");
     _localMiningTimer?.cancel();
     remainingTime.value = durationSeconds;
     status.value = "MINING";
@@ -256,7 +335,10 @@ class SocketService extends GetxService with WidgetsBindingObserver {
     }
 
     if (Get.isRegistered<NotificationService>()) {
+      print("NotificationService is registered, calling scheduleMiningCompletionNotification");
       Get.find<NotificationService>().scheduleMiningCompletionNotification(durationSeconds);
+    } else {
+      print("WARNING: NotificationService is NOT registered in Get!");
     }
 
     _localMiningTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -264,25 +346,30 @@ class SocketService extends GetxService with WidgetsBindingObserver {
         remainingTime.value--;
         
         // Increment live count based on mining per second
-        double speedGh = 0.0;
-        if (Get.isRegistered<HomeController>()) {
-          speedGh = Get.find<HomeController>().effectiveMiningSpeed;
-        } else {
-          speedGh = double.tryParse(currentSpeed.value) ?? 0.0;
-        }
+        // mining digits issue
+        // double speedGh = 0.0;
+        // if (Get.isRegistered<HomeController>()) {
+        //   speedGh = Get.find<HomeController>().effectiveMiningSpeed;
+        // } else {
+        //   speedGh = double.tryParse(currentSpeed.value) ?? 0.0;
+        // }
+        // if (speedGh > 0.0) {
+
+        // mining digits issue
+        double speedGh = currentMiningSpeed;
         if (speedGh > 0.0) {
           double increment = MiningCalcHelper.getBtcPerSecond(speedGh);
           
           double currentVal = double.tryParse(currentEarned.value) ?? 0.0;
           currentVal += increment;
-          currentEarned.value = currentVal.toStringAsFixed(18);
+          currentEarned.value = currentVal.toStringAsFixed(15);
 
 
 /// live count
           double totalVal = double.tryParse(currentMiningBalance.value) ?? 0.0;
           if (totalVal > 0.0) {
             totalVal += increment;
-            currentMiningBalance.value = totalVal.toStringAsFixed(18);
+            currentMiningBalance.value = totalVal.toStringAsFixed(15);
           }
 
           // Only log every 5 seconds to avoid spamming the console
@@ -322,6 +409,11 @@ class SocketService extends GetxService with WidgetsBindingObserver {
       await Future.delayed(const Duration(milliseconds: 1500));
       await fetchMiningStatus();
       status.value = "COMPLETED"; // Explicitly keep COMPLETED state
+
+      // Mining spped issue
+      if (Get.isRegistered<WalletController>()) {
+        Get.find<WalletController>().fetchWalletBalance();
+      }
     } catch (e) {
       dev.log("Error during auto-stop: $e");
     } finally {
@@ -337,6 +429,10 @@ class SocketService extends GetxService with WidgetsBindingObserver {
       return;
     }
 
+    if (Get.isRegistered<NotificationService>()) {
+      await Get.find<NotificationService>().checkAndRequestExactAlarms();
+    }
+
     try {
       isMiningLoading.value = true;
       addLog("🎬 Starting mining session...");
@@ -349,8 +445,9 @@ class SocketService extends GetxService with WidgetsBindingObserver {
 
         // Start local timer based on durationHours from response or default to 24 hours
         final durationHours = startResponse.data?.session?.durationHours ?? 24;
-        totalSessionDuration.value = durationHours * 3600;
-        startLocalMiningTimer(durationHours * 3600);
+        final durationSeconds = (durationHours * 3600).round();
+        totalSessionDuration.value = durationSeconds;
+        startLocalMiningTimer(durationSeconds);
 
         if (startResponse.data?.session?.miningSpeed != null) {
           currentSpeed.value = startResponse.data!.session!.miningSpeed;
@@ -371,6 +468,14 @@ class SocketService extends GetxService with WidgetsBindingObserver {
           fetchMiningStatus();
         });
       } else {
+        final message = startResponse?.message ?? "";
+        if (message.toLowerCase().contains("already active") == true || message.toLowerCase().contains("session already active") == true) {
+          addLog("⚠️ Server says session already active. Syncing client state...");
+          isMiningLoading.value = false;
+          await fetchMiningStatus();
+          return;
+        }
+
         _localMiningTimer?.cancel();
         remainingTime.value = 0;
         status.value = "IDLE";
@@ -389,7 +494,7 @@ class SocketService extends GetxService with WidgetsBindingObserver {
 
       dev.log("Error starting mining session: $e");
       addLog("❌ Error: $e");
-      AppSnackbar.error("Something went wrong while starting mining");
+      AppSnackbar.error("Something went wrong while starting mining: $e");
     } finally {
       isMiningLoading.value = false;
     }
@@ -400,6 +505,8 @@ class SocketService extends GetxService with WidgetsBindingObserver {
       dev.log("⚠️ stopMiningSession: Already performing mining action. Skipping.");
       return;
     }
+
+    // START
 
     // Immediately cancel local timer and reset variables to STOPPED
     _localMiningTimer?.cancel();
@@ -438,6 +545,11 @@ class SocketService extends GetxService with WidgetsBindingObserver {
       await Future.delayed(const Duration(milliseconds: 1500));
       await fetchMiningStatus();
       status.value = "STOPPED"; // Explicitly keep STOPPED state
+
+      // Mining account issue
+      if (Get.isRegistered<WalletController>()) {
+        Get.find<WalletController>().fetchWalletBalance();
+      }
     } catch (e) {
       dev.log("Error stopping mining: $e");
       addLog("❌ Error: $e");
@@ -454,7 +566,7 @@ class SocketService extends GetxService with WidgetsBindingObserver {
   Future<void> fetchMiningStatus() async {
     try {
       isStatusLoading.value = true;
-      final response = await MiningRepo.getMiningStatus();
+      final response = await MiningRepo.getMinin_cgStatus();
       if (response != null) {
         if (response['success'] == false &&
             (response['message']?.toString().toLowerCase().contains("token") == true ||
@@ -485,6 +597,28 @@ class SocketService extends GetxService with WidgetsBindingObserver {
             final serverMiningBalance = data['currentMiningBalance'] ?? data['miningBalance'] ?? sessionObj?['currentMiningBalance'] ?? sessionObj?['miningBalance'];
             final serverEarned = data['currentEarned'] ?? data['earned'] ?? sessionObj?['currentEarned'] ?? sessionObj?['earned'];
 
+            // mining digits issue
+            // double baseBal = 0.0;
+            // if (serverMiningBalance != null) {
+            //   baseBal = double.tryParse(serverMiningBalance.toString()) ?? 0.0;
+            // }
+            // double earnedBal = 0.0;
+            // if (serverEarned != null) {
+            //   earnedBal = double.tryParse(serverEarned.toString()) ?? 0.0;
+            // }
+            // double totalBal = baseBal + earnedBal;
+            // currentMiningBalance.value = totalBal.toStringAsFixed(18);
+            // if (serverEarned != null) {
+            //   if (serverEarned is num) {
+            //     currentEarned.value = serverEarned.toStringAsFixed(18);
+            //   } else {
+            //     final parsedVal = double.tryParse(serverEarned.toString()) ?? 0.0;
+            //     currentEarned.value = parsedVal.toStringAsFixed(18);
+            //   }
+            //   dev.log("🔵 [API SYNC] Live Count fetched as: ${currentEarned.value}");
+            // }
+
+            // mining digits issue
             double baseBal = 0.0;
             if (serverMiningBalance != null) {
               baseBal = double.tryParse(serverMiningBalance.toString()) ?? 0.0;
@@ -495,15 +629,15 @@ class SocketService extends GetxService with WidgetsBindingObserver {
               earnedBal = double.tryParse(serverEarned.toString()) ?? 0.0;
             }
 
+            // Scale balances by 10.0 to match the client's 10x display speed
+            baseBal *= 10.0;
+            earnedBal *= 10.0;
+
             double totalBal = baseBal + earnedBal;
-            currentMiningBalance.value = totalBal.toStringAsFixed(18);
+            currentMiningBalance.value = totalBal.toStringAsFixed(15);
 
             if (serverEarned != null) {
-              if (serverEarned is num) {
-                currentEarned.value = serverEarned.toStringAsFixed(18);
-              } else {
-                currentEarned.value = serverEarned.toString();
-              }
+              currentEarned.value = earnedBal.toStringAsFixed(15);
               dev.log("🔵 [API SYNC] Live Count fetched as: ${currentEarned.value}");
             }
 
@@ -514,11 +648,11 @@ class SocketService extends GetxService with WidgetsBindingObserver {
 
             final serverStatus = data['status'] ?? sessionObj?['status'];
             if (serverStatus != null) {
-              final String serverStatusStr = serverStatus.toString();
-              if (serverStatusStr == "MINING") {
+              final String serverStatusStr = serverStatus.toString().toUpperCase();
+              if (serverStatusStr == "MINING" || serverStatusStr == "ACTIVE" || serverStatusStr == "RUNNING") {
                 status.value = "MINING";
               } else if (status.value != "STOPPED" && status.value != "COMPLETED") {
-                status.value = serverStatusStr;
+                status.value = serverStatus.toString();
               }
             }
 
@@ -527,17 +661,17 @@ class SocketService extends GetxService with WidgetsBindingObserver {
             dynamic rawStart = data['startTime'] ?? sessionObj?['startTime'];
             dynamic rawEnd = data['endTime'] ?? sessionObj?['endTime'];
             if (rawStart != null && rawEnd != null) {
-              final start = DateTime.tryParse(rawStart.toString());
-              final end = DateTime.tryParse(rawEnd.toString());
+              final start = _parseServerDateTime(rawStart);
+              final end = _parseServerDateTime(rawEnd);
               if (start != null && end != null) {
                 sessionDuration = end.difference(start).inSeconds;
               }
             } else {
               dynamic rawDuration = data['durationHours'] ?? sessionObj?['durationHours'];
               if (rawDuration != null) {
-                final parsed = int.tryParse(rawDuration.toString());
+                final parsed = double.tryParse(rawDuration.toString());
                 if (parsed != null) {
-                  sessionDuration = parsed * 3600;
+                  sessionDuration = (parsed * 3600).round();
                 }
               }
             }
@@ -546,19 +680,38 @@ class SocketService extends GetxService with WidgetsBindingObserver {
             }
 
             final serverRemaining = data['remainingTime'] ?? data['timeRemaining'] ?? sessionObj?['remainingTime'] ?? sessionObj?['timeRemaining'];
+            int? parsedRemaining;
             if (serverRemaining != null) {
-              int timeInSeconds = 0;
               if (serverRemaining is int) {
-                timeInSeconds = serverRemaining;
+                parsedRemaining = serverRemaining;
               } else if (serverRemaining is double) {
-                timeInSeconds = serverRemaining.toInt();
+                parsedRemaining = serverRemaining.toInt();
               } else {
-                timeInSeconds = int.tryParse(serverRemaining.toString()) ?? 0;
+                parsedRemaining = int.tryParse(serverRemaining.toString());
               }
+            }
+
+            // Fallback: If parsedRemaining is null or <= 0, try to compute from endTime (rawEnd)
+            if ((parsedRemaining == null || parsedRemaining <= 0) && rawEnd != null) {
+              final end = _parseServerDateTime(rawEnd);
+              if (end != null) {
+                final diff = end.difference(DateTime.now()).inSeconds;
+                if (diff > 0) {
+                  parsedRemaining = diff;
+                }
+              }
+            }
+
+            if (parsedRemaining != null) {
+              int timeInSeconds = parsedRemaining;
 
               // Only overwrite remainingTime if client timer is not active, OR if the server has a positive remaining time
               if (remainingTime.value == 0 || timeInSeconds > 0) {
                 remainingTime.value = timeInSeconds;
+
+                if (timeInSeconds > 0) {
+                  status.value = "MINING";
+                }
 
                 final bool isTimerActive = _localMiningTimer != null && _localMiningTimer!.isActive;
                 // If the status is MINING and timeRemaining is active, start ticking down locally

@@ -236,8 +236,8 @@ class _RentalDurationList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       return Column(
-        children: List.generate(controller.plans.length, (i) {
-          final plan = controller.plans[i];
+        children: List.generate(controller.filteredPlans.length, (i) {
+          final plan = controller.filteredPlans[i];
           final isSelected = controller.selectedPlanIndex.value == i;
 
           return _PlanCard(

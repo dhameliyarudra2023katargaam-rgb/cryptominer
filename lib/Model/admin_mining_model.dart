@@ -108,7 +108,9 @@ class AdminMiningSession {
   final String userId;
   final String status;
   final String miningSpeed;
-  final int durationHours;
+  /// HOUR MIN SESSION
+  // final int durationHours;
+  final num durationHours;
   final String startTime;
   final String? endTime;
 
@@ -128,9 +130,13 @@ class AdminMiningSession {
       userId: json['userId']?.toString() ?? '',
       status: json['status']?.toString() ?? 'IDLE',
       miningSpeed: json['miningSpeed']?.toString() ?? json['speed']?.toString() ?? '0.0',
-      durationHours: json['durationHours'] is int 
-          ? json['durationHours'] 
-          : (int.tryParse(json['durationHours']?.toString() ?? '0') ?? 0),
+ /// HOUR MIN SESSION  
+  //  durationHours: json['durationHours'] is int 
+  //         ? json['durationHours'] 
+  //         : (int.tryParse(json['durationHours']?.toString() ?? '0') ?? 0),
+      durationHours: json['durationHours'] is num 
+          ? json['durationHours'] as num
+          : (num.tryParse(json['durationHours']?.toString() ?? '0') ?? 0),
       startTime: json['startTime']?.toString() ?? '',
       endTime: json['endTime']?.toString(),
     );

@@ -1,6 +1,8 @@
 class ApiConst {
   // static const String baseUrl = "http://192.168.1.66:5000";
-  static const String baseUrl = "https://miner-3np7.onrender.com/api";
+  // static const String baseUrl = "https://miner-3np7.onrender.com/api";
+  // static const String baseUrl = "https://miner-be-slpb.onrender.com/api";
+  static const String baseUrl = "https://miner-be-1.onrender.com/api";
   static const String socketUrl = "https://miner-3np7.onrender.com";
 
   static const String registerApi = "/auth/register";
@@ -24,6 +26,7 @@ class ApiConst {
   /// Wallet APIs
   static const String walletBalanceApi = "/wallet/balance"; // done
   static const String walletTransactionsApi = "/wallet/transactions"; // done
+  static const String claimWalletApi = "/wallet/claim";
 
   /// Withdrawals APIs
   static const String withdrawalsRequestApi = "/withdrawals/request";

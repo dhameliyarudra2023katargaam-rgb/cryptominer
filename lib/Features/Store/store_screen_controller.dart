@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import '../../Utility/app_snackbar.dart';
 import '../../Repo/store_repo.dart';
 import '../../Repo/home_screen_mining_repo.dart';
-import 'store_model.dart';
+import 'package:cryptominer/Features/Store/store_model.dart';
 
 class StoreController extends GetxController {
   // ─── Observable State ────────────────────────────────────────────────────
@@ -212,10 +212,21 @@ class StoreController extends GetxController {
   /// Active mining power label for the top card
   String get activeMiningLabel {
     final sub = currentSubscription.value;
-    if (sub == null) return "No Active Plan";
-    return "${sub.planDisplayName} • ${sub.miningSpeed.toStringAsFixed(0)} GH/s";
+    if (sub == null || sub.planName == "plan_1" || sub.planName == "10 GH/s" || sub.miningSpeed <= 10.0) {
+      return "10 GH/s Miner";
+    }
+    final speedText = sub.miningSpeed >= 1000
+        ? "${(sub.miningSpeed / 1000).toStringAsFixed(0)} TH/s"
+        : "${sub.miningSpeed.toStringAsFixed(0)} GH/s";
+    return "${sub.planDisplayName} • $speedText";
   }
 
   /// True if user has any active subscription
-  bool get hasActivePlan => currentSubscription.value != null;
+  bool get hasActivePlan {
+    final sub = currentSubscription.value;
+    if (sub == null) return false;
+    if (sub.planName == "plan_1" || sub.planName == "10 GH/s") return false;
+    if (sub.miningSpeed <= 10.0) return false;
+    return true;
+  }
 }

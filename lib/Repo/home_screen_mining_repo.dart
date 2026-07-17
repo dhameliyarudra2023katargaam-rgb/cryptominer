@@ -114,7 +114,7 @@ class MiningRepo {
   }
 
   /// Get Mining Status
-  static Future<Map<String, dynamic>?> getMiningStatus() async {
+  static Future<Map<String, dynamic>?> getMinin_cgStatus() async {
     Map<String, String> headers = {};
     var response = await ApiService().getResponse(
       apiType: APIType.aGet,

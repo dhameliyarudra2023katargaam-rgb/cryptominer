@@ -223,17 +223,21 @@ class AuthController extends GetxController with WidgetsBindingObserver {
 
       if (responseModel.isSuccess == true) {
         // Step 3: Store signup details in Firestore database
-        await FirebaseFirestore.instance.collection('users').doc(cleanEmail).set({
-          "email": cleanEmail,
-          "name": username,
-          "birthDate": dob,
-          "password": password,
-          "referralCode": referralCode ?? "",
-          "isVerified": false,
-          "token": "",
-          "createdAt": FieldValue.serverTimestamp(),
-        });
-        log("Saved pending user to Firestore under document ID: $cleanEmail");
+        try {
+          await FirebaseFirestore.instance.collection('users').doc(cleanEmail).set({
+            "email": cleanEmail,
+            "name": username,
+            "birthDate": dob,
+            "password": password,
+            "referralCode": referralCode ?? "",
+            "isVerified": false,
+            "token": "",
+            "createdAt": FieldValue.serverTimestamp(),
+          });
+          log("Saved pending user to Firestore under document ID: $cleanEmail");
+        } catch (firestoreError) {
+          log("Firestore pending user save failed: $firestoreError");
+        }
 
         // Step 4: Send Firebase verification email
         await firebaseUser.sendEmailVerification();
@@ -793,6 +797,37 @@ class AuthController extends GetxController with WidgetsBindingObserver {
             "email",
             responseModel.data!.user!.email!,
           );
+        }
+
+        // Sync user details to Firestore for Google login
+        final String? email = responseModel.data?.user?.email ?? firebaseUser.email;
+        if (email != null && email.isNotEmpty) {
+          final String cleanEmail = email.trim().toLowerCase();
+          try {
+            final userDocRef = FirebaseFirestore.instance.collection('users').doc(cleanEmail);
+            final docSnap = await userDocRef.get();
+            if (!docSnap.exists) {
+              await userDocRef.set({
+                "email": cleanEmail,
+                "name": responseModel.data?.user?.name ?? firebaseUser.displayName ?? "",
+                "birthDate": "",
+                "password": "",
+                "referralCode": "",
+                "isVerified": firebaseUser.emailVerified,
+                "token": SharedPrefHelper.getString("token") ?? firebaseIdToken ?? "",
+                "createdAt": FieldValue.serverTimestamp(),
+              });
+              log("Saved new Google user to Firestore.");
+            } else {
+              await userDocRef.set({
+                "isVerified": firebaseUser.emailVerified,
+                "token": SharedPrefHelper.getString("token") ?? firebaseIdToken ?? "",
+              }, SetOptions(merge: true));
+              log("Updated existing Google user in Firestore.");
+            }
+          } catch (firestoreError) {
+            log("Error writing Google user details to Firestore: $firestoreError");
+          }
         }
 
         // Fetch complete current user details to get updated isMpinSet status
@@ -1525,14 +1560,19 @@ class AuthController extends GetxController with WidgetsBindingObserver {
       }
 
       // Update Firestore user document with current token and password
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(cleanEmail)
-          .set({
-        "isVerified": true,
-        "token": SharedPrefHelper.getString("token") ?? firebaseToken,
-        "password": password,
-      }, SetOptions(merge: true));
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(cleanEmail)
+            .set({
+          "isVerified": true,
+          "token": SharedPrefHelper.getString("token") ?? firebaseToken,
+          "password": password,
+        }, SetOptions(merge: true));
+        log("Updated user status/token in Firestore successfully.");
+      } catch (firestoreError) {
+        log("Firestore user document update failed: $firestoreError");
+      }
 
       // Upload FCM token
       if (Get.isRegistered<NotificationService>()) {
@@ -1616,7 +1656,8 @@ class AuthController extends GetxController with WidgetsBindingObserver {
       try {
         final String? email = SharedPrefHelper.getString("email");
         if (email != null && email.isNotEmpty) {
-          await FirebaseFirestore.instance.collection('users').doc(email).delete();
+          final String cleanEmail = email.trim().toLowerCase();
+          await FirebaseFirestore.instance.collection('users').doc(cleanEmail).delete();
           log("Firestore user document deleted.");
         }
         
@@ -1644,6 +1685,8 @@ class AuthController extends GetxController with WidgetsBindingObserver {
       try {
         if (Get.isRegistered<SocketService>()) {
           // Add disconnect logic here if needed, or rely on clear()
+          // Mining account issue
+          Get.find<SocketService>().disconnectSocket();
         }
       } catch (e) {
         log("Socket disconnect error: $e");

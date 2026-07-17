@@ -2,6 +2,7 @@ import 'dart:developer';
 import '../Api/api_const.dart';
 import '../Api/api_handler.dart';
 import '../Service/storage_service.dart';
+import '../Model/wallet_claim_model.dart';
 
 class WalletRepo {
   /// Get Wallet Balance
@@ -67,6 +68,28 @@ class WalletRepo {
     log("Get Withdrawal History Response: $response");
     if (response is Map<String, dynamic>) {
       return response;
+    }
+    return null;
+  }
+
+  /// Claim Wallet Reward
+  static Future<WalletClaimResponse?> claimWallet() async {
+    final String? token = SharedPrefHelper.getString("token");
+    Map<String, String> headers = {
+      "Content-Type": "application/json",
+    };
+    if (token != null && token.isNotEmpty) {
+      headers["Authorization"] = "Bearer $token";
+    }
+    var response = await ApiService().getResponse(
+      apiType: APIType.aPost,
+      url: "${ApiConst.baseUrl}${ApiConst.claimWalletApi}",
+      body: {"adCompleted": true},
+      header: headers,
+    );
+    log("Claim Wallet Response: $response");
+    if (response is Map<String, dynamic>) {
+      return WalletClaimResponse.fromJson(response);
     }
     return null;
   }

@@ -51,7 +51,9 @@ class MiningSession {
   final String miningSpeed;
   final String rewardPerSecond;
   final String rewardSource;
-  final int durationHours;
+  /// HOUR MIN SESSION
+  // final int durationHours;
+  final num durationHours;
 
   MiningSession({
     required this.sessionId,
@@ -65,13 +67,24 @@ class MiningSession {
 
   factory MiningSession.fromJson(Map<String, dynamic> json) {
     return MiningSession(
-      sessionId: json['sessionId'] ?? '',
-      startTime: json['startTime'] ?? '',
-      endTime: json['endTime'] ?? '',
+      sessionId: json['sessionId']?.toString() ?? '',
+      startTime: json['startTime']?.toString() ?? '',
+      endTime: json['endTime']?.toString() ?? '',
       miningSpeed: json['miningSpeed']?.toString() ?? '0',
       rewardPerSecond: json['rewardPerSecond']?.toString() ?? '0.00000000',
-      rewardSource: json['rewardSource'] ?? '',
-      durationHours: json['durationHours'] ?? 24,
+      rewardSource: json['rewardSource']?.toString() ?? '',
+      /// HOUR MIN SESSION
+      //  durationHours: json['durationHours'] is int
+      //     ? json['durationHours']
+      //     : (int.tryParse(json['durationHours']?.toString() ?? '') ?? 24),
+      
+      
+      
+      
+      
+      durationHours: json['durationHours'] is num
+          ? json['durationHours'] as num
+          : (num.tryParse(json['durationHours']?.toString() ?? '') ?? 24),
     );
   }
 
@@ -128,7 +141,7 @@ class StopMiningData {
   factory StopMiningData.fromJson(Map<String, dynamic> json) {
     return StopMiningData(
       rewardAmount: json['rewardAmount']?.toString() ?? '0.00000000',
-      sessionId: json['sessionId'] ?? '',
+      sessionId: json['sessionId']?.toString() ?? '',
     );
   }
 

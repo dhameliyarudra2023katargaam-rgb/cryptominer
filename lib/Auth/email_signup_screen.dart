@@ -121,7 +121,7 @@ class EmailSignUpScreen extends GetView<AuthController> {
                     titleWidth: 228,
                     titleHeight: 24,
                     fontSize: 24,
-                    fontWeight: FontWeight.normal,
+                    fontWeight: FontWeight.w500,
                   )),
             ),
             const SizedBox(height: 24),

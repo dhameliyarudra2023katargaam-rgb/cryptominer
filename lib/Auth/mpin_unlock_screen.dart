@@ -18,19 +18,19 @@ class MpinUnlockScreen extends StatelessWidget {
       backgroundColor: CommonColor.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          physics: const NeverScrollableScrollPhysics(),
+          physics: const BouncingScrollPhysics(),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 60.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
                 Icon(
                   Icons.lock_outline_rounded,
                   color: CommonColor.orange.withValues(alpha: 0.8),
                   size: 64,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
                 // "Unlock using PIN" Label
                 Text(
@@ -41,7 +41,7 @@ class MpinUnlockScreen extends StatelessWidget {
                     fontWeight: FontWeight.normal,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Text(
                   "Enter your 4-digit PIN to secure your session",
                   style: CommonFontStyles.body.copyWith(
@@ -49,11 +49,11 @@ class MpinUnlockScreen extends StatelessWidget {
                     fontSize: 14,
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
 
                 // Pin Dots
                 _buildPinDots(controller),
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
 
                 // Forgot PIN Button
                 TextButton(
@@ -69,7 +69,7 @@ class MpinUnlockScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
 
                 // Keyboard / Loading
                 Obx(() => controller.isLoading.value
@@ -133,7 +133,7 @@ class MpinUnlockScreen extends StatelessWidget {
             _buildKeypadButton("3", onTap: () => _handleKeyPress(controller, "3")),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -142,7 +142,7 @@ class MpinUnlockScreen extends StatelessWidget {
             _buildKeypadButton("6", onTap: () => _handleKeyPress(controller, "6")),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -151,11 +151,11 @@ class MpinUnlockScreen extends StatelessWidget {
             _buildKeypadButton("9", onTap: () => _handleKeyPress(controller, "9")),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            const SizedBox(width: 70, height: 70),
+            const SizedBox(width: 66, height: 66),
             _buildKeypadButton("0", onTap: () => _handleKeyPress(controller, "0")),
             _buildKeypadButton("", icon: Icons.backspace_outlined, onTap: controller.onBackspacePress),
           ],
@@ -177,10 +177,10 @@ class MpinUnlockScreen extends StatelessWidget {
   Widget _buildKeypadButton(String label, {VoidCallback? onTap, IconData? icon}) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(40),
+      borderRadius: BorderRadius.circular(33),
       child: Container(
-        width: 70,
-        height: 70,
+        width: 66,
+        height: 66,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: CommonColor.darkGray.withValues(alpha: 0.3),

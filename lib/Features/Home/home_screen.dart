@@ -17,6 +17,7 @@ import '../../Utility/app_custom_dialog.dart';
 import '../Profile/profile_screen.dart';
 import '../Store/store_screen_view.dart';
 import '../Wallet/wallet_screen.dart';
+import '../Wallet/wallet_controller.dart';
 import '../../Service/socket_service.dart';
 import '../../Auth/auth_controller.dart';
 import '../../Service/notification_service.dart';
@@ -25,6 +26,7 @@ import 'home_controller.dart';
 import 'maximize_profit_screen.dart';
 import '../AdminMining/admin_mining_config_screen.dart';
 import '../../Utility/mining_calc_helper.dart';
+import '../Store/store_screen_controller.dart';
 
 class HomeScreenView extends StatefulWidget {
   final int initialIndex;
@@ -44,6 +46,7 @@ class _HomeScreenViewState extends State<HomeScreenView> {
   final SocketService socketService = Get.put(SocketService());
 
   final HomeController homeController = Get.put(HomeController());
+  final WalletController walletController = Get.put(WalletController());
 
   @override
   void initState() {
@@ -61,6 +64,8 @@ class _HomeScreenViewState extends State<HomeScreenView> {
     if (Get.isRegistered<NotificationService>()) {
       Get.find<NotificationService>().fetchUnreadCount();
       Get.find<NotificationService>().fetchNotifications();
+      // Check and request exact alarm permission for mining notifications
+      Get.find<NotificationService>().checkAndRequestExactAlarms();
     }
   }
 
@@ -217,40 +222,31 @@ class _HomeScreenViewState extends State<HomeScreenView> {
                                 CommonText.body(
                                   "Basic Miner (${socketService.status.value})",
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.normal),
+                                      fontWeight: FontWeight.w500),
                                 ),
                           ),
                           Flexible(
-                            child: Obx(
-                                  () =>
-                                  FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text.rich(
-                                      TextSpan(
-                                        children: [
-                                          TextSpan(
-                                            text:
-                                            "${double
-                                                .tryParse(socketService
-                                                .currentMiningBalance.value)
-                                                ?.toStringAsFixed(8) ??
-                                                socketService
-                                                    .currentMiningBalance
-                                                    .value} ",
-                                            style: CommonFontStyles.heading1,
-                                          ),
-                                          TextSpan(
-                                            text: "BTC",
-                                            style: CommonFontStyles.body
-                                                .copyWith(
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                            child: Obx(() {
+                              final rawBalance = walletController.walletBalance['totalBalance'];
+                              double parsed = 0.0;
+                              if (rawBalance != null) {
+                                parsed = double.tryParse(rawBalance.toString()) ?? 0.0;
+                              }
+                              String formatBtc(double value) {
+                                return value.toStringAsFixed(6);
+                              }
+                              final String displayBalance = formatBtc(parsed);
+                              return FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  "\$$displayBalance",
+                                  style: CommonFontStyles.heading1.copyWith(
+                                    fontWeight: FontWeight.w500,
                                   ),
-                            ),
+                                ),
+                              );
+                            }),
                           ),
                         ],
                       ),
@@ -297,16 +293,32 @@ class _HomeScreenViewState extends State<HomeScreenView> {
                                           .center,
                                       children: [
                                         Obx(() {
-                                          return CommonText.h2(
-                                            homeController.effectiveMiningSpeed.toStringAsFixed(1),
-                                            style: const TextStyle(fontSize: 22),
+                                          final isMining = socketService.status.value.toUpperCase() == "MINING";
+                                          final speed = isMining 
+                                              ? (double.tryParse(socketService.currentSpeed.value) ?? homeController.effectiveMiningSpeed)
+                                              : homeController.effectiveMiningSpeed;
+                                          final speedText = speed >= 1000 
+                                              ? (speed / 1000).toStringAsFixed(1) 
+                                              : speed.toStringAsFixed(1);
+                                          return Text(
+                                            speedText,
+                                            style: CommonFontStyles.heading2.copyWith(
+                                              fontSize: 22,
+                                              fontFamily: 'Poppins',
+                                            ),
                                           );
                                         }),
                                         const SizedBox(width: 8),
-                                        const CommonText.small(
-                                          "GH/s",
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
+                                        Obx(() {
+                                          final isMining = socketService.status.value.toUpperCase() == "MINING";
+                                          final speed = isMining 
+                                              ? (double.tryParse(socketService.currentSpeed.value) ?? homeController.effectiveMiningSpeed)
+                                              : homeController.effectiveMiningSpeed;
+                                          return CommonText.small(
+                                            speed >= 1000 ? "TH/s" : "GH/s",
+                                            style: const TextStyle(color: Colors.grey),
+                                          );
+                                        }),
                                       ],
                                     ),
                                   ),
@@ -320,14 +332,16 @@ class _HomeScreenViewState extends State<HomeScreenView> {
                                           .center,
                                       children: [
                                         Obx(() {
-                                          final dashGpus = homeController.effectiveGpus;
-                                          final statusData = socketService.miningStatus;
-                                          final gpus = homeController.isBoosting.value 
-                                              ? dashGpus 
-                                              : (statusData['gpus'] ?? statusData['session']?['gpus'] ?? dashGpus);
-                                          return CommonText.h2(
-                                            gpus.toString(),
-                                            style: const TextStyle(fontSize: 22),
+                                          final speedVal = double.tryParse(socketService.currentSpeed.value) ?? 0.0;
+                                          final speedText = speedVal >= 1000 
+                                              ? (speedVal / 1000).toStringAsFixed(1) 
+                                              : speedVal.toStringAsFixed(1);
+                                          return Text(
+                                            speedText,
+                                            style: CommonFontStyles.heading2.copyWith(
+                                              fontSize: 22,
+                                              fontFamily: 'Poppins',
+                                            ),
                                           );
                                         }),
                                         const SizedBox(width: 8),
@@ -348,14 +362,21 @@ class _HomeScreenViewState extends State<HomeScreenView> {
                                           .center,
                                       children: [
                                         Obx(() {
-                                          final dashMiners = homeController.effectiveMiners;
-                                          final statusData = socketService.miningStatus;
-                                          final miners = homeController.isBoosting.value 
-                                              ? dashMiners 
-                                              : (statusData['miners'] ?? statusData['session']?['miners'] ?? dashMiners);
-                                          return CommonText.h2(
-                                            miners.toString(),
-                                            style: const TextStyle(fontSize: 22),
+                                          int activePlans = 1; // Free 10Gh is always active
+                                          if (Get.isRegistered<StoreController>()) {
+                                            if (Get.find<StoreController>().hasActivePlan) {
+                                              activePlans += 1;
+                                            }
+                                          }
+                                          if (homeController.isBoosting.value) {
+                                            activePlans += 1;
+                                          }
+                                          return Text(
+                                            activePlans.toString(),
+                                            style: CommonFontStyles.heading2.copyWith(
+                                              fontSize: 22,
+                                              fontFamily: 'Poppins',
+                                            ),
                                           );
                                         }),
                                         const SizedBox(width: 8),
@@ -495,15 +516,22 @@ class _HomeScreenViewState extends State<HomeScreenView> {
                           Row(
                             children: [
                               Obx(() {
+                                final speed = homeController.effectiveMiningSpeed;
+                                final speedText = speed >= 1000 
+                                    ? (speed / 1000).toStringAsFixed(1) 
+                                    : speed.toStringAsFixed(1);
                                 return CommonText.body(
-                                  "${homeController.effectiveMiningSpeed.toStringAsFixed(1)} ",
+                                  "$speedText ",
                                   style: const TextStyle(fontWeight: FontWeight.normal),
                                 );
                               }),
-                              const CommonText.body(
-                                "GH/s",
-                                style: TextStyle(color: Colors.grey),
-                              ),
+                              Obx(() {
+                                final speed = homeController.effectiveMiningSpeed;
+                                return CommonText.body(
+                                  speed >= 1000 ? "TH/s" : "GH/s",
+                                  style: const TextStyle(color: Colors.grey),
+                                );
+                              }),
                               const SizedBox(width: 4),
                               GestureDetector(
                                 onTap: () {
@@ -624,8 +652,7 @@ class _HomeScreenViewState extends State<HomeScreenView> {
                       Align(
                         alignment: Alignment.center,
                         child: Container(
-                          width: 371,
-                          height: 60,
+                          width: 370,
                           decoration: BoxDecoration(
                             color: CommonColor.glassWhite,
                             borderRadius: BorderRadius.circular(16),
@@ -634,7 +661,7 @@ class _HomeScreenViewState extends State<HomeScreenView> {
                               width: 1.0,
                             ),
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           child: Row(
                             children: [
                               Center(
@@ -652,7 +679,7 @@ class _HomeScreenViewState extends State<HomeScreenView> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     CommonText.body(
-                                      "5X mining Speed-up to         ",
+                                      "5X mining Speed-up",
                                       style: TextStyle(
                                         fontWeight: FontWeight.normal,
                                         color: Colors.white,

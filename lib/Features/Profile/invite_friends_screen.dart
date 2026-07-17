@@ -1,7 +1,6 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:get/get.dart';
 import '../../Utility/black_card.dart';
 import '../../Utility/common_color.dart';
 import '../../Utility/common_copy_clipboard.dart';
@@ -75,12 +74,15 @@ class _InviteFriendsScreenState extends State<InviteFriendsScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              "Referral Code",
-                              style: CommonFontStyles.heading3,
+                            Expanded(
+                              child: Obx(() => Text(
+                                controller.displayReferralCode,
+                                style: CommonFontStyles.heading3,
+                                overflow: TextOverflow.ellipsis,
+                              )),
                             ),
+                            const SizedBox(width: 8),
                             SvgPicture.asset(
-
                               ImageConst.copyIcon,
                               width: 18,
                               height: 18,
@@ -110,10 +112,14 @@ class _InviteFriendsScreenState extends State<InviteFriendsScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              "Referral link",
-                              style: CommonFontStyles.heading3,
+                            Expanded(
+                              child: Obx(() => Text(
+                                controller.displayReferralLink,
+                                style: CommonFontStyles.heading3,
+                                overflow: TextOverflow.ellipsis,
+                              )),
                             ),
+                            const SizedBox(width: 8),
                             SvgPicture.asset(
                               ImageConst.copyIcon,
                               width: 18,

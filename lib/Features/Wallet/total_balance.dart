@@ -2,7 +2,7 @@ import 'package:cryptominer/Features/Wallet/withdrawal_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'wallet_controller.dart';
-import '../Home/home_controller.dart';
+
 
 import '../../Utility/black_card.dart';
 import '../../Utility/common_color.dart';
@@ -16,7 +16,7 @@ class TotalBalance extends StatelessWidget {
   Widget build(BuildContext context) {
     return GradientBorderContainer(
       width: 370,
-      height: 130,
+      height: 125,
       borderRadius: 16,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Column(
@@ -34,6 +34,7 @@ class TotalBalance extends StatelessWidget {
                     style: TextStyle(
                       color: Colors.grey,
                       fontSize: 13,
+                      fontFamily: 'Poppins',
                     ),
                   ),
                   const SizedBox(width: 5),
@@ -60,29 +61,32 @@ class TotalBalance extends StatelessWidget {
                 if (rawBalance != null) {
                   parsed = double.tryParse(rawBalance.toString()) ?? 0.0;
                 }
-                final String displayBalance = parsed.toStringAsFixed(2);
-                
-                // Calculate monthly earnings based on active mining speed
-                double speedGh = 0.0;
-                if (Get.isRegistered<HomeController>()) {
-                  speedGh = double.tryParse(Get.find<HomeController>().dashboardMiningSpeed.value) ?? 0.0;
+                String formatBtc(double value) {
+                  if (value == 0.0) return "0.00";
+                  String s = value.toStringAsFixed(20);
+                  while (s.endsWith('0')) {
+                    s = s.substring(0, s.length - 1);
+                  }
+                  if (s.endsWith('.')) {
+                    s = s.substring(0, s.length - 1);
+                  }
+                  return s;
                 }
-                double monthlyUsd = speedGh * 0.0000101;
-
+                final String displayBalance = formatBtc(parsed);
+                
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CommonText.h1(
-                      "\$$displayBalance",
-                      style: const TextStyle(
-                        color: CommonColor.orange,
-                        fontWeight: FontWeight.normal,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: CommonText.h1(
+                        "\$$displayBalance",
+                        style: const TextStyle(
+                          color: CommonColor.orange,
+                          fontWeight: FontWeight.normal,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    CommonText.small(
-                      "Est. Monthly: \$${monthlyUsd.toStringAsFixed(6)} / Month",
-                      style: const TextStyle(color: Colors.grey, fontSize: 11),
                     ),
                   ],
                 );
@@ -121,6 +125,7 @@ class TotalBalance extends StatelessWidget {
                       color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.normal,
+                      fontFamily: 'Poppins',
                     ),
                   ),
                 ),

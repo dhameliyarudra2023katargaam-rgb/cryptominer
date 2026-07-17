@@ -7,7 +7,7 @@ import '../../Utility/common_text.dart';
 import '../../Utility/custom_appbar.dart';
 import '../../Service/Ads/banner_ads_service.dart';
 import 'store_screen_controller.dart';
-import 'store_model.dart';
+import 'package:cryptominer/Features/Store/store_model.dart';
 import 'plan_details_screen.dart';
 import '../Home/home_controller.dart';
 
@@ -79,7 +79,7 @@ class _MyMinerScreenState extends State<MyMinerScreen> {
             ),
             const SizedBox(height: 6),
             CommonText.body(
-              "Speed: ${plan.miningSpeed.toStringAsFixed(0)} GH/s",
+              "Speed: ${plan.miningSpeed >= 1000 ? '${(plan.miningSpeed / 1000).toStringAsFixed(0)} TH/s' : '${plan.miningSpeed.toStringAsFixed(0)} GH/s'}",
               style: const TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 6),
@@ -565,7 +565,9 @@ class SuggestMinerCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            "${plan.miningSpeed.toStringAsFixed(0)} Th/s",
+            plan.miningSpeed >= 1000
+                ? "${(plan.miningSpeed / 1000).toStringAsFixed(0)} TH/s"
+                : "${plan.miningSpeed.toStringAsFixed(0)} GH/s",
             style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.normal),
           ),
           Column(

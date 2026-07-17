@@ -235,7 +235,7 @@ class SpeedCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   CommonText.body(
-                    speedText.contains("10 GH/s") ? "Free Plan" : "Home Plan",
+                    speedText.contains("10 GH/s") ? "Free Plan" : "Paid Plan",
                     style: const TextStyle(
                       color: CommonColor.orange,
                       fontSize: 14,

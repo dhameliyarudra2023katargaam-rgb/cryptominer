@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 
 import '../../Service/Ads/native_ads_service.dart';
 import '../../Utility/app_custom_dialog.dart';
-import '../../Utility/app_snackbar.dart';
+
 import '../../Utility/black_card.dart';
 import '../../Utility/common_color.dart';
 import '../../Utility/common_next_arrow_icon.dart';
@@ -15,7 +15,7 @@ import '../../Utility/custom_appbar.dart';
 import '../../Utility/font_style.dart';
 import 'my_miner_screen.dart';
 // import '../../Utility/yellow_card.dart'; // Boost button commented out
-import 'store_model.dart';
+import 'package:cryptominer/Features/Store/store_model.dart';
 
 class StoreScreenView extends StatelessWidget {
   const StoreScreenView({super.key});
@@ -115,8 +115,9 @@ class StoreScreenView extends StatelessWidget {
                                                     .copyWith(fontSize: 16),
                                               ),
                                               TextSpan(
-                                                text:
-                                                    "${sub.miningSpeed.toStringAsFixed(0)} GH/s",
+                                                text: sub.miningSpeed >= 1000
+                                                    ? "${(sub.miningSpeed / 1000).toStringAsFixed(0)} TH/s"
+                                                    : "${sub.miningSpeed.toStringAsFixed(0)} GH/s",
                                                 style: CommonFontStyles.heading3
                                                     .copyWith(
                                                   color: CommonColor.orange,
@@ -209,8 +210,9 @@ class StoreScreenView extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Obx(() => SpeedCard(
-                          speedText:
-                              "${plan1.miningSpeed.toStringAsFixed(0)} GH/s",
+                          speedText: plan1.miningSpeed >= 1000
+                              ? "${(plan1.miningSpeed / 1000).toStringAsFixed(0)} TH/s"
+                              : "${plan1.miningSpeed.toStringAsFixed(0)} GH/s",
                           aprValue: "${plan1.aprPercent.toStringAsFixed(2)}%",
                           freeCpuValue:
                               "+${plan1.freeCpuPercent.toStringAsFixed(1)}%",
@@ -218,7 +220,7 @@ class StoreScreenView extends StatelessWidget {
                           isSelected:
                               controller.selectedPlanIndex.value == i,
                           discountText: plan1.discountText,
-                          onTap: () {
+                           onTap: () {
                             controller.selectPlan(i);
                             Get.to(
                               () => const CreateMinerScreen(),
@@ -228,14 +230,17 @@ class StoreScreenView extends StatelessWidget {
                               },
                               transition: Transition.rightToLeft,
                               duration: const Duration(milliseconds: 300),
-                            );
+                            )?.then((_) {
+                              controller.selectPlan(-1);
+                            });
                           },
                         )),
                     const SizedBox(width: 14),
                     plan2 != null
                         ? Obx(() => SpeedCard(
-                              speedText:
-                                  "${plan2.miningSpeed.toStringAsFixed(0)} GH/s",
+                              speedText: plan2.miningSpeed >= 1000
+                                  ? "${(plan2.miningSpeed / 1000).toStringAsFixed(0)} TH/s"
+                                  : "${plan2.miningSpeed.toStringAsFixed(0)} GH/s",
                               aprValue:
                                   "${plan2.aprPercent.toStringAsFixed(2)}%",
                               freeCpuValue:
@@ -244,18 +249,20 @@ class StoreScreenView extends StatelessWidget {
                               isSelected:
                                   controller.selectedPlanIndex.value == i + 1,
                               discountText: plan2.discountText,
-                              onTap: () {
-                                controller.selectPlan(i + 1);
-                                Get.to(
-                                  () => const CreateMinerScreen(),
-                                  arguments: {
-                                    'speed': plan2.miningSpeed,
-                                    'id': plan2.id,
-                                  },
-                                  transition: Transition.rightToLeft,
-                                  duration: const Duration(milliseconds: 300),
-                                );
-                              },
+                               onTap: () {
+                                  controller.selectPlan(i + 1);
+                                  Get.to(
+                                    () => const CreateMinerScreen(),
+                                    arguments: {
+                                      'speed': plan2.miningSpeed,
+                                      'id': plan2.id,
+                                    },
+                                    transition: Transition.rightToLeft,
+                                    duration: const Duration(milliseconds: 300),
+                                  )?.then((_) {
+                                    controller.selectPlan(-1);
+                                  });
+                                },
                             ))
                         : const Expanded(child: SizedBox()),
                   ],
@@ -289,48 +296,51 @@ class StoreScreenView extends StatelessWidget {
           // const SizedBox(height: 14),
 
           // ── Purchase Button (opens Create Minor screen) ───────────────────
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: () {
-                final int idx = controller.selectedPlanIndex.value;
-                if (idx >= 0 && idx < controller.plans.length) {
-                  Get.to(
-                    () => const CreateMinerScreen(),
-                    arguments: {
-                      'speed': controller.plans[idx].miningSpeed,
-                      'id': controller.plans[idx].id,
+          Obx(() {
+            final int idx = controller.selectedPlanIndex.value;
+            if (idx == -1) {
+              return const SizedBox.shrink();
+            }
+            return Column(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (idx >= 0 && idx < controller.plans.length) {
+                        Get.to(
+                          () => const CreateMinerScreen(),
+                          arguments: {
+                            'speed': controller.plans[idx].miningSpeed,
+                            'id': controller.plans[idx].id,
+                          },
+                          transition: Transition.rightToLeft,
+                          duration: const Duration(milliseconds: 300),
+                        );
+                      }
                     },
-                    transition: Transition.rightToLeft,
-                    duration: const Duration(milliseconds: 300),
-                  );
-                } else {
-                  Get.to(
-                    () => const CreateMinerScreen(),
-                    transition: Transition.rightToLeft,
-                    duration: const Duration(milliseconds: 300),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: CommonColor.blue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: CommonColor.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      "Purchase",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.normal,
+                        fontSize: 17,
+                      ),
+                    ),
+                  ),
                 ),
-                elevation: 0,
-              ),
-              child: const Text(
-                "Purchase",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.normal,
-                  fontSize: 17,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
+                const SizedBox(height: 24),
+              ],
+            );
+          }),
               ],
             ),
           ),
@@ -342,73 +352,5 @@ class StoreScreenView extends StatelessWidget {
     );
   }
 
-  // ── Purchase Confirmation Dialog ────────────────────────────────────────────
-  void _showPurchaseDialog(
-    BuildContext context,
-    StoreController controller,
-    SubscriptionPlan plan,
-  ) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: CommonColor.greyCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: CommonText.h2(
-          "Confirm Purchase",
-          style: const TextStyle(color: Colors.white),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CommonText.body(
-              "Plan: ${plan.displayName}",
-              style: const TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 6),
-            CommonText.body(
-              "Speed: ${plan.miningSpeed.toStringAsFixed(0)} GH/s",
-              style: const TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 6),
-            CommonText.h3(
-              "Price: ₹${plan.price.toStringAsFixed(2)}",
-              style: const TextStyle(color: CommonColor.orange),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text(
-              "Cancel",
-              style: TextStyle(color: Colors.grey),
-            ),
-          ),
-          Obx(() => controller.isPurchasing.value
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: CommonColor.orange,
-                  ),
-                )
-              : TextButton(
-                  onPressed: () {
-                    Navigator.of(ctx).pop();
-                    controller.purchasePlan(plan);
-                  },
-                  child: const Text(
-                    "Buy Now",
-                    style: TextStyle(
-                      color: CommonColor.orange,
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
-                )),
-        ],
-      ),
-    );
-  }
+
 }
